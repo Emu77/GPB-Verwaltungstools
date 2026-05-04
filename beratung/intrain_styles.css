@@ -1,0 +1,138 @@
+#rumpf {
+  width:100%;
+  display:flex;
+  justify-content:space-evenly;
+  gap:10px;
+}
+
+.spalte {
+  background-color:rgb(238,238,238);
+  padding:4px;
+}
+.linke {
+  flex-grow:1;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:1em;
+}
+.mittlere {
+  flex-grow:1;
+  flex-shrink:0;
+}
+.rechte {
+  flex-grow:1;
+  flex-shrink:1;
+}
+
+#fuss {
+  background-color:rgb(238,238,238);
+  padding:4px;
+  margin-top:10px;
+  width:100%;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-evenly;
+  gap:10px;
+}
+
+.todo {
+  color:blue;
+}
+.todo:before {
+  content:'TODO ';
+}
+.nok {
+  color:red;
+}
+
+#ausbildungen_table td {
+  text-align:center;
+}
+.editbtn {
+  cursor:pointer;
+}
+
+.euro {
+}
+.euro:after {
+  content:' €';
+}
+
+.wo {
+}
+.wo:after {
+  content:' Wochen';
+}
+
+.ue {
+}
+.ue:after {
+  content:' UE';
+}
+
+.h {
+}
+.h:after {
+  content:' h';
+}
+
+.hklammer {
+}
+.hklammer:before {
+  content:' (';
+}
+.hklammer:after {
+  content:' h)';
+}
+
+#angebot_div {
+  text-align:center;
+}
+
+#module_table td {
+  text-align:center;
+  padding-left:1ch;
+  padding-right:1ch;
+}
+
+#kalender_div {
+  width:100%;
+  display:flex;
+  flex-wrap:wrap;
+  gap:2ch;
+}
+.monat {
+  display:inline-block;
+  vertical-align:top;
+}
+.monat table,
+.monat th,
+.monat td {
+  border-color:rgb(238,238,238);
+}
+.monat th {
+  font-weight:normal;
+}
+.monat th,
+.monat td {
+  background-color:rgb(225,225,225);
+}
+.monat td.na {
+  background-color:rgb(215,215,215);
+}
+.monat td.anfang {
+  background-color:rgb(100,255,100);
+}
+.monat td.arbeit {
+  background-color:rgb(200,255,200);
+}
+.monat td.ferien {
+  background-color:rgb(255,200,200);
+}
+.monat td.schulferien {
+  color:rgb(192,0,0);
+}
+.anfangok {
+  cursor:pointer;
+}

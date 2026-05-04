@@ -1,0 +1,179 @@
+* {
+  font-family:sans-serif;
+  font-size:12px;
+}
+body {
+    background-color:rgb(255,144,100); /* rgb(234,184,15) */
+    margin:10px;
+    width:fit-content;
+}
+tr:has(> td:hover) td {
+  background-color:rgb(255,227,216);
+}
+
+#menue {
+    margin:10px;
+}
+#menue a {
+    display:inline-block;
+    margin-right:10px;
+    color:black;
+    text-decoration:none;
+}
+#menue a:hover {
+  background-color:rgb(200,200,200);
+}
+
+h1 {
+    background-color:white;
+    margin:0;
+    padding:10px;
+    padding-bottom:1em;
+    font-size:18px;
+    font-weight:bold;
+}
+#inhalt {
+    background-color:white;
+    padding:10px;
+    padding-top:0;
+}
+
+h2 {
+  font-size:14px;
+  font-weight:bold;
+  margin:0;
+  margin-top:1em;
+  margin-bottom:0.5em;
+}
+
+.fehler {
+  color:red;
+}
+.ok {
+  color:default;
+}
+.done {
+  color:green;
+}
+.todo {
+  color:red;
+}
+.tododev {
+  color:brown;
+}
+.tododev:before {
+  content:'TODO ';
+}
+
+.testmoodle {
+  background-color:#c59dd9;
+}
+.moodle {
+  background-color:#eab80f;
+}
+
+table.sehen {
+  margin-bottom:1em;
+}
+
+.bearbeiten * {
+
+}
+.sehen * {
+
+}
+.bearbeiten input[type="text"],
+.bearbeiten input[type="date"],
+.bearbeiten select {
+  border:2px inset grey;
+}
+.bearbeiten button,
+.bearbeiten input[type="submit"] {
+  border:2px outset grey;
+}
+.bearbeiten .suche input[type="text"],
+.bearbeiten .suche input[type="date"],
+.bearbeiten .suche select,
+.bearbeiten .suche button,
+.bearbeiten .suche input[type="submit"] {
+  border:1px solid grey;
+}
+
+.suchbutton {
+  border:none;
+  background:none;
+  padding:0;
+}
+
+.ferien a {
+  font-size:14px;
+  font-weight:bold;
+  color:rgb(0,128,0);
+}
+
+.anwesenheit {
+  text-align:center;
+  cursor:pointer;
+}
+
+#kurzbericht th {
+  text-align:left;
+}
+#kurzbericht textarea {
+  width:600px;
+  height:100px;
+}
+
+#tagesbericht textarea {
+  width:35ch;
+  height:6em;
+}
+
+.bewertungsfrage {
+  writing-mode:vertical-rl; /* sideways-lr nicht von Chrome unterstützt */
+  width:1.5em;
+  max-height:250px;
+  padding:2px;
+}
+.stumm td {
+  color:grey;
+}
+.summen td {
+  font-weight:bold;
+}
+#feedbacks {
+  margin-bottom:1em;
+}
+.feedback {
+  font-style:italic;
+}
+.feedback:before {
+  content:'„';
+}
+.feedback:after {
+  content:'”';
+}
+td.feedback {
+  width:200px;
+}
+.klappbar .feedback {
+  display:none;
+}
+.klappbar:hover .feedback {
+  display:block;
+  width:200px;
+}
+
+.verfuegbarkeit {
+  min-height:1em;
+}
+.geplantes {
+  
+}
+.sichtbar {
+  background-color:rgb(250,238,195);
+}
+.moodle .btn,
+-moodletest .btn {
+  color:rgb(128,0,0);
+}
