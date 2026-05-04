@@ -28,7 +28,11 @@ $seite=VerwaltungSeite::$menueByUrl['../verwaltung/klassen.php'];
 $seite->anfangGenerieren();
 if($ich->istleiter) {
 ?>
+<<<<<<< HEAD
 <a href="klassen_kalender.php">Klassen-Kalender</a>
+=======
+<a href="../leitung/klassen_kalender.php">Klassen-Kalender</a><br />
+>>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
 <?php
 }
 ?>
