@@ -103,19 +103,14 @@ if(!empty($kurse->byId)) {
   $result->free();
 }
 $anzahlBewerter=0;
-<<<<<<< HEAD
 $anzahlTNGesamt=0;
 foreach($kurse->alle as $kurs) {
   $anzahlTNGesamt += (int)$kurs->anzahlTN;
-=======
-foreach($kurse->alle as $kurs) {
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
   if(isset($kurs->bewerterids)) {
     $anzahlBewerter+=count($kurs->bewerterids);
   }
 }
 
-<<<<<<< HEAD
 // Bewertungsfragen wie in kurs_bewertung.php in zwei Gruppen anzeigen
 $fragenDozent=array('dozent_fachsicher','dozent_klar','zielorientiert','gegliedert','lernklima');
 $fragenSchule=array('interessant','material_nuetzlich','material_gut','ausstattung');
@@ -136,8 +131,6 @@ foreach($fragenSchule as $frage) {
   }
 }
 
-=======
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
 //$t1=microtime(true);
 //echo "Bewertungen laden: ".(($t1-$t0)*1000)."ms<br />\n";
 //ob_flush();
@@ -251,7 +244,6 @@ if(empty($anzahlen)) {
   <tr>
     <td align="right" valign="bottom"><button type="button" style="margin:1em;" onclick="location.href='bewertung_pdf.php'">PDF</button></td>
 <?php
-<<<<<<< HEAD
   foreach($fragenDozent as $frage) {
 ?>
     <td class="bewertungsfrage"><?= Bewertung::$fragen[$frage] ?></td>
@@ -267,14 +259,6 @@ if(empty($anzahlen)) {
   }
 ?>
     <td class="bewertungsfrage" style="border-left:2px solid #000; border-right:2px solid #000;"><b>Summe Schule</b></td>
-=======
-  foreach(Bewertung::$fragen as $frage=>$fragentext) {
-?>
-    <td class="bewertungsfrage"><?= $fragentext ?></td>
-<?php
-  }
-?>
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
     <td class="bewertungsfrage"><b>Alle Fragen zusammen</b></td>
     <td class="bewertungsfrage">Feedbacks</td>
     <td>&nbsp;</td>
@@ -282,17 +266,12 @@ if(empty($anzahlen)) {
   <tr class="summen">
     <td align="right">Durchschnitt</td>
 <?php
-<<<<<<< HEAD
     foreach($fragenDozent as $frage) {
-=======
-    foreach(Bewertung::$fragen as $frage=>$fragentext) {
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
 ?>
     <td align="center" valign="top"><?= isset($anzahlen[$frage]) ? sprintf('%0.1f',$werte[$frage]/$anzahlen[$frage]) : '' ?></td>
 <?php
     }
 ?>
-<<<<<<< HEAD
     <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenDozent > 0 ? sprintf('%0.1f',$werteDozent/$anzahlenDozent) : '' ?></b></td>
 <?php
     foreach($fragenSchule as $frage) {
@@ -302,8 +281,6 @@ if(empty($anzahlen)) {
     }
 ?>
     <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenSchule > 0 ? sprintf('%0.1f',$werteSchule/$anzahlenSchule) : '' ?></b></td>
-=======
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
     <td align="center"><?= $anzahlen['summe'] > 0 ? sprintf('%0.1f',$werte['summe']/$anzahlen['summe']) : '' ?></td>
     <td>&nbsp;</td>
     <td>&nbsp;</td>
@@ -311,17 +288,12 @@ if(empty($anzahlen)) {
   <tr class="summen">
     <td align="right">Anzahl Bewertungen</td>
 <?php
-<<<<<<< HEAD
     foreach($fragenDozent as $frage) {
-=======
-    foreach(Bewertung::$fragen as $frage=>$fragentext) {
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
 ?>
     <td align="center" valign="top"><?= isset($anzahlen[$frage]) ? $anzahlen[$frage] : '' ?></td>
 <?php
     }
 ?>
-<<<<<<< HEAD
     <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenDozent > 0 ? $anzahlenDozent.($anzahlTNGesamt > 0 ? '<br />('.round(100*$anzahlenDozent/($anzahlTNGesamt * count($fragenDozent))).'%)' : '') : '' ?></b></td>
 <?php
     foreach($fragenSchule as $frage) {
@@ -331,15 +303,12 @@ if(empty($anzahlen)) {
     }
 ?>
     <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenSchule > 0 ? $anzahlenSchule.($anzahlTNGesamt > 0 ? '<br />('.round(100*$anzahlenSchule/($anzahlTNGesamt * count($fragenSchule))).'%)' : '') : '' ?></b></td>
-=======
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
     <td align="center"><?= $anzahlBewerter>0 ? $anzahlBewerter.'&nbsp;TN' : '' ?></td>
     <td align="center"><?= isset($anzahlen['info']) ? $anzahlen['info'] : '' ?></td>
     <td>&nbsp;</td>
   </tr>
 <?php
   foreach($kurse->alle as $kurs) {
-<<<<<<< HEAD
     $kursWerteDozent=$kursAnzahlenDozent=0;
     foreach($fragenDozent as $frage) {
       if(isset($kurs->anzahlen[$frage])) {
@@ -354,8 +323,6 @@ if(empty($anzahlen)) {
         $kursAnzahlenSchule += $kurs->anzahlen[$frage];
       }
     }
-=======
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
 ?>
   <tr>
     <td valign="top">
@@ -363,17 +330,12 @@ if(empty($anzahlen)) {
       <div align="right"><?= $kurs->anzahlTN ?>&nbsp;TN</div>
     </td>
 <?php
-<<<<<<< HEAD
     foreach($fragenDozent as $frage) {
-=======
-    foreach(Bewertung::$fragen as $frage=>$fragentext) {
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
 ?>
     <td align="center" valign="top"><?= isset($kurs->anzahlen[$frage]) ? sprintf('%0.1f',$kurs->werte[$frage]/$kurs->anzahlen[$frage]).'<br />'.$kurs->anzahlen[$frage].'&nbsp;('.round(100*$kurs->anzahlen[$frage]/$kurs->anzahlTN).'&nbsp;%)' : '' ?></td>
 <?php
     }
 ?>
-<<<<<<< HEAD
     <td align="center" valign="top" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $kursAnzahlenDozent > 0 ? sprintf('%0.1f',$kursWerteDozent/$kursAnzahlenDozent).'<br />'.$kursAnzahlenDozent.'&nbsp;('.round(100*$kursAnzahlenDozent/($kurs->anzahlTN * count($fragenDozent))).'&nbsp;%)' : '' ?></b></td>
 <?php
     foreach($fragenSchule as $frage) {
@@ -383,8 +345,6 @@ if(empty($anzahlen)) {
     }
 ?>
     <td align="center" valign="top" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $kursAnzahlenSchule > 0 ? sprintf('%0.1f',$kursWerteSchule/$kursAnzahlenSchule).'<br />'.$kursAnzahlenSchule.'&nbsp;('.round(100*$kursAnzahlenSchule/($kurs->anzahlTN * count($fragenSchule))).'&nbsp;%)' : '' ?></b></td>
-=======
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
     <td align="center"><b><?= isset($kurs->anzahlen) && $kurs->anzahlen['summe']>0 ? sprintf('%0.1f',$kurs->werte['summe']/$kurs->anzahlen['summe']).'<br />'.count($kurs->bewerterids).'&nbsp;('.round(100*count($kurs->bewerterids)/$kurs->anzahlTN).'%)' : '' ?></b></td>
     <td valign="top" align="center" class="klappbar">
 <?php

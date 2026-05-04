@@ -34,11 +34,7 @@ export class PlanungKlasse extends PlanungObject {
   }
   
   sollPlanVergleichOeffnen() {
-<<<<<<< HEAD
     window.open('../verwaltung/klasse_sollplanvergleich.php?klasseid='+this.id,'sollplanvergleich');
-=======
-    window.open('klasse_sollplanvergleich.php?klasseid='+this.id,'sollplanvergleich');
->>>>>>> 9da4159481b70c6eec1600617e27d80c11728803
   }
   async sollKurseErstellen(raumid) {
     if(this.berufid<=0) {
