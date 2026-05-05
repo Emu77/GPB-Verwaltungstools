@@ -294,7 +294,7 @@ if(empty($anzahlen)) {
 <?php
     }
 ?>
-    <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenDozent > 0 ? $anzahlenDozent.($anzahlTNGesamt > 0 ? '<br />('.round(100*$anzahlenDozent/($anzahlTNGesamt * count($fragenDozent))).'%)' : '') : '' ?></b></td>
+    <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenDozent > 0 ? $anzahlenDozent : '' ?></b></td>
 <?php
     foreach($fragenSchule as $frage) {
 ?>
@@ -302,7 +302,7 @@ if(empty($anzahlen)) {
 <?php
     }
 ?>
-    <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenSchule > 0 ? $anzahlenSchule.($anzahlTNGesamt > 0 ? '<br />('.round(100*$anzahlenSchule/($anzahlTNGesamt * count($fragenSchule))).'%)' : '') : '' ?></b></td>
+    <td align="center" style="border-left:2px solid #000; border-right:2px solid #000;"><b><?= $anzahlenSchule > 0 ? $anzahlenSchule : '' ?></b></td>
     <td align="center"><?= $anzahlBewerter>0 ? $anzahlBewerter.'&nbsp;TN' : '' ?></td>
     <td align="center"><?= isset($anzahlen['info']) ? $anzahlen['info'] : '' ?></td>
     <td>&nbsp;</td>
