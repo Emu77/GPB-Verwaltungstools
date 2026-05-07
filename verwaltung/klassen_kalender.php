@@ -1,7 +1,7 @@
 <?php
 require_once 'check_login.php';
 require_once '../Liste.php';
-require_once 'VerwaltungKlasse.php';
+require_once $ich->istleiter ? '../leitung/LeitungKlasse.php' : 'VerwaltungKlasse.php';
 require_once 'VerwaltungSeite.php';
 
 $wann=isset($_POST['wann']) ? $_POST['wann'] : (isset($_GET['wann']) ? $_GET['wann'] : false);
@@ -19,7 +19,7 @@ if(empty($ich->ort)) {
   $stmt=$db->prepare("select * from gpb_klasse_view where ort=? and (ende is null or ende='0000-00-00' or ende>=?) ".($prak ? "" : "and bezeichnung not like '%PRAK%'")." order by familieid,berufkuerzel");
   $stmt->bind_param('ss',$ich->ort,$wann);
 }
-$klassen=new Liste('VerwaltungKlasse',$stmt);
+$klassen=new Liste($ich->istleiter ? 'LeitungKlasse' : 'VerwaltungKlasse',$stmt);
 $von=strtotime($wann);
 $bis=$von;
 foreach($klassen->alle as $k) {
@@ -33,7 +33,6 @@ foreach($klassen->alle as $k) {
 if(date('w',$von)!=1) $von=strtotime('last monday',$von);
 $heute=strtotime('today');
 if(date('w',$heute)!=1) $heute=strtotime('last monday',$heute);
-
 $seite=new VerwaltungSeite('Klassenkalender '.(empty($ich->ort) ? '' : $ich->ort.' ').date('d.m.Y',strtotime($wann)));
 $seite->anfangGenerieren();
 ?>

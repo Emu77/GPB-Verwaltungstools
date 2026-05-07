@@ -9,7 +9,11 @@ $suche->inputString('titel');
 $ort=isset($_POST['ort']) ? $_POST['ort'] : (isset($_GET['ort']) ? $_GET['ort'] : '');
 if(!empty($ort)) {
   $suche->ort=$ort;
-  $suche->addKriterium('ort=?',$suche->ort=='-' ? '' : $suche->ort,'s');
+  if($suche->ort=='-') {
+    $suche->where[]="(ort='' or ort is null)";
+  } else {
+    $suche->addKriterium('ort=?',$suche->ort,'s');
+  }
 }
 $suche->massnahmekuerzel=isset($_POST['massnahmekuerzel']) ? $_POST['massnahmekuerzel'] : (isset($_GET['massnahmekuerzel']) ? $_GET['massnahmekuerzel'] : '');
 if(!empty($suche->massnahmekuerzel)) {

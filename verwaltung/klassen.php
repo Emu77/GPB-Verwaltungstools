@@ -1,7 +1,7 @@
 <?php
 require_once 'check_login.php';
 require_once '../Liste.php';
-require_once 'VerwaltungKlasse.php';
+require_once $ich->istleiter ? '../leitung/LeitungKlasse.php' : 'VerwaltungKlasse.php';
 
 $suche=isset($_SESSION['klassen_suche']) ? $_SESSION['klassen_suche'] : new Suche('bezeichnung','ort','starter');
 if(empty($suche->where)) {
@@ -18,7 +18,7 @@ if(empty($suche->where)) {
   $jetztsuchen=true;
 }
 
-$klassen=new Liste('VerwaltungKlasse',empty($suche->where) || !$jetztsuchen ? null : 
+$klassen=new Liste($ich->istleiter ? 'LeitungKlasse' : 'VerwaltungKlasse',empty($suche->where) || !$jetztsuchen ? null :
   $suche->prepare("select * from gpb_klasse_view where","order by beginn,ende,bezeichnung limit 50"));
   
 $letzteWoche=date('Y-m-d',strtotime('-1 week'));
@@ -26,12 +26,8 @@ $letzteWoche=date('Y-m-d',strtotime('-1 week'));
 require_once $ich->istleiter ? '../leitung/LeitungSeite.php' : 'VerwaltungSeite.php';
 $seite=VerwaltungSeite::$menueByUrl['../verwaltung/klassen.php'];
 $seite->anfangGenerieren();
-if($ich->istleiter) {
 ?>
 <a href="klassen_kalender.php">Klassen-Kalender</a>
-<?php
-}
-?>
 <a href="klassen_zusaetzlich.php">Sonderimports (inTrain-Sammelklassen, Prak-Klassen für PV, ...)</a>
 <table border="1" cellspacing="0" style="border-collapse:collapse;margin-top:1em;">
   <tr>

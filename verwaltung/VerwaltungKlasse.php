@@ -19,11 +19,11 @@ class VerwaltungKlasse extends Klasse {
       <a href="klasse_sehen.php?klasseid=<?= $this->id ?>">Sehen</a>
       <a href="klasse_tn.php?klasseid=<?= $this->id ?>">TN</a>
       <a href="klasse_kurse.php?klasseid=<?= $this->id ?>">Kurse</a>
+      <a href="klasse_sollplanvergleich.php?klasseid=<?= $this->id ?>" target="sollplanvergleich">Soll-Plan-Vergleich</a>
 <?php
     if($ich->istleiter) {
 ?>
       <a href="../leitung/klasse_kurse_bewertung.php?klasseid=<?= $this->id ?>">Modulbewertung</a>
-      <a href="klasse_sollplanvergleich.php?klasseid=<?= $this->id ?>" target="sollplanvergleich">
 <?php
     }
 ?>

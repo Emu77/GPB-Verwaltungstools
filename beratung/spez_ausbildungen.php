@@ -1,6 +1,9 @@
 <?php
 require_once 'check_login.php';
 require_once 'spez_teilzeit_wochenue.php';
+
+$scroll=isset($_GET['scroll']) ? (int)$_GET['scroll'] : 0;
+
 function formatDate($d) {
   return empty($d) || $d=='0000-00-00' ? '' : date('d.m.Y',strtotime($d));
 }
@@ -321,7 +324,7 @@ $seite->anfangGenerieren();
       location.href='spez_modul_hinzufuegen.php?ausbildungid='+this.id+'&modulid='+modulid;
     }
     speichern(spalte,neu) {
-      location.href='spez_daten_speichern.php?ausbildungid='+this.id+'&tabelle=gpb_spezausbildung&spalte='+spalte+'&id='+this.id+'&neu='+encodeURIComponent(neu);
+      location.href='spez_daten_speichern.php?scroll='+window.scrollY+'&tabelle=gpb_spezausbildung&spalte='+spalte+'&id='+this.id+'&neu='+encodeURIComponent(neu);
     }
   }
   Ausbildung.initAlle(<?= json_encode($ausbildungen) ?>);
@@ -381,23 +384,24 @@ $seite->anfangGenerieren();
       calc.tds.zertif_von=makeTd(tr,this.zertif_von);
       calc.tds.zertif_bis=makeTd(tr,this.zertif_bis);
       calc.tds.mitisid=makeTd(tr,this.mitisid,'left');
+
+      makeEditor(this,'titel','Titel',calc.tds.titel);
+      makeEditor(this,'preis','Preis',calc.tds.preis);
+      makeEditor(this,'anzahlue','Modul-Dauer (UE)',calc.tds.anzahlue);
+      makeEditor(this,'vollzeit_massnnr','Maßnahmenummer Modul Vollzeit',calc.tds.vollzeit_massnnr);
+      if(this.zertifmit==0 && aus.id==0 ) {
+        makeEditor(this,'vollzeit_wochenue','UE pro Wochen Vollzeit',calc.tds.vollzeit_wochen);
+      }
+      makeEditor(this,'vollzeit_von','Maßnahmedauer Modul Vollzeit von',calc.tds.vollzeit_von);
+      makeEditor(this,'vollzeit_bis','Maßnahmedauer Modul Vollzeit bis',calc.tds.vollzeit_bis);
+      makeEditor(this,'teilzeit_massnnr','Maßnahmenummer Modul Teilzeit',calc.tds.teilzeit_massnnr);
+      makeEditor(this,'teilzeit_von','Maßnahmedauer Modul Teilzeit von',calc.tds.teilzeit_von);
+      makeEditor(this,'teilzeit_bis','Maßnahmedauer Modul Teilzeit bis',calc.tds.teilzeit_bis);
+      makeEditor(this,'zertif_von','Zertif. von',calc.tds.zertif_von);
+      makeEditor(this,'zertif_bis','Zertif. bis',calc.tds.zertif_bis);
+      makeEditor(this,'mitisid','MITIS-ID',calc.tds.mitisid);
       if(aus.id==this.zertifmit) {
-        makeEditor(this,'titel','Titel',calc.tds.titel);
         makeButton('Löschen',()=>this.loeschen(),calc.tds.titel);
-        makeEditor(this,'preis','Preis',calc.tds.preis);
-        makeEditor(this,'anzahlue','Modul-Dauer (UE)',calc.tds.anzahlue);
-        makeEditor(this,'vollzeit_massnnr','Maßnahmenummer Modul Vollzeit',calc.tds.vollzeit_massnnr);
-        if(this.zertifmit==0 && aus.id==0 ) {
-          makeEditor(this,'vollzeit_wochenue','UE pro Wochen Vollzeit',calc.tds.vollzeit_wochen);
-        }
-        makeEditor(this,'vollzeit_von','Maßnahmedauer Modul Vollzeit von',calc.tds.vollzeit_von);
-        makeEditor(this,'vollzeit_bis','Maßnahmedauer Modul Vollzeit bis',calc.tds.vollzeit_bis);
-        makeEditor(this,'teilzeit_massnnr','Maßnahmenummer Modul Teilzeit',calc.tds.teilzeit_massnnr);
-        makeEditor(this,'teilzeit_von','Maßnahmedauer Modul Teilzeit von',calc.tds.teilzeit_von);
-        makeEditor(this,'teilzeit_bis','Maßnahmedauer Modul Teilzeit bis',calc.tds.teilzeit_bis);
-        makeEditor(this,'zertif_von','Zertif. von',calc.tds.zertif_von);
-        makeEditor(this,'zertif_bis','Zertif. bis',calc.tds.zertif_bis);
-        makeEditor(this,'mitisid','MITIS-ID',calc.tds.mitisid);
       } else {
         makeButton('Entfernen',()=>this.entfernen(aus),calc.tds.titel);
       }
@@ -413,7 +417,7 @@ $seite->anfangGenerieren();
       }
     }
     speichern(spalte,neu) {
-      location.href='spez_daten_speichern.php?ausbildungid='+this.zertifmit+'&tabelle=gpb_spezmodul&spalte='+spalte+'&id='+this.id+'&neu='+encodeURIComponent(neu);
+      location.href='spez_daten_speichern.php?scroll='+window.scrollY+'&tabelle=gpb_spezmodul&spalte='+spalte+'&id='+this.id+'&neu='+encodeURIComponent(neu);
     }
   }
   Modul.initAlle(<?= json_encode($module) ?>);
@@ -427,6 +431,13 @@ $seite->anfangGenerieren();
   for(let aus of Ausbildung.alle) {
     aus.makeTrs(table);
   }
+<?php
+if(!empty($scroll)) {
+?>
+  window.scroll({'top':<?= $scroll ?>});
+<?php
+}
+?>
 </script>
 <div id="rumpf">
   <table id="ausbildungen_table" border="1" cellspacing="0" style="border-collapse:collapse;">

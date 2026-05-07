@@ -60,6 +60,13 @@ h2 {
   color:red;
 }
 
+.tododev {
+  color:brown;
+}
+.tododev:before {
+  content:'TODO ';
+}
+
 .testmoodle {
   background-color:#c59dd9;
 }

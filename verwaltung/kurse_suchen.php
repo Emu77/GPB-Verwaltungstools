@@ -12,7 +12,11 @@ $suche->inputString('titel');
 $ort=isset($_POST['ort']) ? $_POST['ort'] : (isset($_GET['ort']) ? $_GET['ort'] : '');
 if(!empty($ort)) {
   $suche->ort=$ort;
-  $suche->addKriterium('ort=?',$suche->ort=='-' ? '' : $suche->ort,'s');
+  if($suche->ort=='-') {
+    $suche->where[]="(ort='' or ort is null)";
+  } else {
+    $suche->addKriterium('ort=?',$suche->ort,'s');
+  }
 }
 $suche->inputString('raum');
 $suche->inputBoolean('ohneraum',"raumid is null");

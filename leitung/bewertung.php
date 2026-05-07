@@ -21,7 +21,7 @@ if(empty($suche->where)) {
 
 //$t0=microtime(true);
 
-$kurse=new Liste('LeitungKurs',$suche->prepare("select * from gpb_kurs_view where","order by beginn,ende,modultitel,titel limit 50"));
+$kurse=new Liste('LeitungKurs',$suche->prepare("select * from gpb_kurs_view where","order by beginn,ende,modultitel,titel"));
 
 //$t1=microtime(true);
 //echo "Kurse laden: ".(($t1-$t0)*1000)."ms<br />\n";
@@ -102,16 +102,15 @@ if(!empty($kurse->byId)) {
   }
   $result->free();
 }
-$anzahlBewerter=0;
 $anzahlTNGesamt=0;
+$anzahlBewerter=0;
 foreach($kurse->alle as $kurs) {
-  $anzahlTNGesamt += (int)$kurs->anzahlTN;
+  $anzahlTNGesamt+=$kurs->anzahlTN;
   if(isset($kurs->bewerterids)) {
     $anzahlBewerter+=count($kurs->bewerterids);
   }
 }
 
-// Bewertungsfragen wie in kurs_bewertung.php in zwei Gruppen anzeigen
 $fragenDozent=array('dozent_fachsicher','dozent_klar','zielorientiert','gegliedert','lernklima');
 $fragenSchule=array('interessant','material_nuetzlich','material_gut','ausstattung');
 
@@ -242,7 +241,10 @@ if(empty($anzahlen)) {
 ?>
 <table border="1" cellspacing="0" style="border-collapse:collapse;">
   <tr>
-    <td align="right" valign="bottom"><button type="button" style="margin:1em;" onclick="location.href='bewertung_pdf.php'">PDF</button></td>
+    <td align="right" valign="bottom">
+      <?= count($kurse->alle) ?> Kurse gefunden<br />
+      <button type="button" style="margin:1em;" onclick="location.href='bewertung_pdf.php'">PDF</button>
+    </td>
 <?php
   foreach($fragenDozent as $frage) {
 ?>

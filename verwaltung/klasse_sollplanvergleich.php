@@ -1,11 +1,10 @@
 <?php
 require_once 'check_login.php';
-require_once 'VerwaltungKlasse.php';
-require_once '../leitung/LeitungKlasse.php';
-require_once '../leitung/LeitungKurs.php';
+require_once $ich->istleiter ? '../leitung/LeitungKlasse.php' : 'VerwaltungKlasse.php';
+require_once $ich->istleiter ? '../leitung/LeitungKurs.php' : 'VerwaltungKurs.php';
 require_once '../Liste.php';
 
-$klasse=Klasse::eineLaden(isset($_GET['klasseid']) ? (int)$_GET['klasseid'] : 0,'LeitungKlasse');
+$klasse=Klasse::eineLaden(isset($_GET['klasseid']) ? (int)$_GET['klasseid'] : 0,$ich->istleiter ? 'LeitungKlasse' : 'VerwaltungKlasse');
 if(empty($klasse)) {
   header('Location:../verwaltung/klassen.php');
   exit;
@@ -58,7 +57,7 @@ if(!empty($kurse->byId)) {
   }
 }
 
-require_once 'VerwaltungSeite.php';
+require_once $ich->istleiter ? '../leitung/LeitungSeite.php' : 'VerwaltungSeite.php';
 $seite=new VerwaltungSeite('Soll-Plan-Vergleich Klasse '.$klasse->bezeichnung);
 $seite->anfangGenerieren();
 $klasse->makeSehen('sehen');

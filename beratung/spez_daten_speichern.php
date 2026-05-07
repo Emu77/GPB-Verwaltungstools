@@ -23,7 +23,7 @@ $stmt=$db->prepare("update ".$tabelle." set ".$spalte."=? where id=?");
 $stmt->bind_param('si',$neu,$id);
 $stmt->execute();
 
-$ausbildungid=isset($_GET['ausbildungid']) ? (int)$_GET['ausbildungid'] : 0;
-header('Location:spez_ausbildungen.php'.($ausbildungid>0 ? '#ausbildung_'.$ausbildungid : ''));
+$scroll=isset($_GET['scroll']) ? (int)$_GET['scroll'] : 0;
+header('Location:spez_ausbildungen.php'.(empty($scroll) ? '' : '?scroll='.$scroll));
 exit;
 ?>
