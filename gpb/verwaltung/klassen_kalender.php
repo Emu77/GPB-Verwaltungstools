@@ -41,6 +41,12 @@ $seite->anfangGenerieren();
   PRAK-Klassen&nbsp;<input type="checkbox" name="prak" value="J" <?= $prak ? 'checked' : '' ?> onchange="document.getElementById('wann_form').submit()" />
 </form>
 <style>
+body {
+  width:fit-content;
+}
+#inhalt {
+  display:block;
+}
 .klasse {
   background-color:rgb(220,220,220);
 }

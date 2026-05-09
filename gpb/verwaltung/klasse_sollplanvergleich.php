@@ -30,7 +30,7 @@ if(!empty($klasse->berufid)) {
   $result->free();
 }
 
-$kurse=new Liste('LeitungKurs',$db->prepare("select * from gpb_kurs_view where id in(select kursid from gpb_kurs_klasse where klasseid=".$klasse->id.") order by beginn,ende,titel"));
+$kurse=new Liste($ich->istleiter ? 'LeitungKurs' : 'VerwaltungKurs',$db->prepare("select * from gpb_kurs_view where id in(select kursid from gpb_kurs_klasse where klasseid=".$klasse->id.") order by beginn,ende,titel"));
 Kurs::anzahlTNLaden($kurse);
 Kurs::refsLaden($kurse);
 if(!empty($kurse->byId)) {

@@ -28,7 +28,7 @@ $result->free();
 
 $kurse=new Liste('VerwaltungKurs',$db->prepare("
   select distinct k.*,n.*
-    ,case when k.zeugnisgewichtung>=0 then k.zeugnisgewichtung else case when k.einzeltage then (datediff(k.ende,k.beginn)+1)/7 else ceil(datediff(k.ende,k.beginn)/7) end end as kursdauer
+    ,case when k.zeugnisgewichtung>=0 then k.zeugnisgewichtung else case when k.einzeltage then ceil((datediff(k.ende,k.beginn)+1)/7) else ceil(datediff(k.ende,k.beginn)/7) end end as kursdauer
     from gpb_klasse_tn ktn 
     join gpb_kurs_klasse kk on kk.klasseid=ktn.klasseid
     join gpb_kurs_view k on k.id=kk.kursid
