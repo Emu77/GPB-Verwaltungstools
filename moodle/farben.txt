@@ -1,0 +1,4 @@
+Site Administration > Darstellung > Themes > Boost Rädchen > Accent Color
+
+Prod: #eab80f
+Test: #BB70FC

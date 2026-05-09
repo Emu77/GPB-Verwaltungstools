@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>GPB neues Moodle und neue Verwaltungstools</title>
+  <script type="module">
+    let verz=document.getElementById('inhaltsverzeichnis');
+    let menue=document.getElementById('menue');
+    let h2s=document.getElementsByTagName('h2');
+    for(let i=0;i<h2s.length;++i) {
+      let a=document.createElement('a');
+      a.href='#'+h2s[i].parentNode.id;
+      a.innerText=h2s[i].innerText;
+      menue.appendChild(a);
+      if(h2s[i].parentNode==verz) continue;
+      a=document.createElement('a');
+      a.href='#'+h2s[i].parentNode.id;
+      a.innerText=h2s[i].innerText;
+      verz.appendChild(a);
+    }
+  </script>
+</head>
+<body>
+<div id="menue">
+  <div id="menueoeffner">≡</div>
+</div>
+<h1>GPB neues Moodle und neue Verwaltungstools<br />
+FAQ für Dozenten</h1>
+<p class="wichtig">Strg+F ist dein Freund!</p>
+
+<section id="inhaltsverzeichnis">
+  <h2>Inhaltsverzeichnis</h2>
+</section>
+
+<section id="Wo">
+<h2>Wo ist was?</h2>
+Die neuen Verwaltungstools (Klassen-Tools) sind hier:<br />
+<a href="https://verwaltung.gpbmedien.de/dozent/" target="gpb">https://verwaltung.gpbmedien.de/dozent</a><br />
+<a href="https://verwaltung.gpbmedien.de/dozent/" target="gpb"><img src="dozentenlogin.png" title="Dozenten-Loginseite" /></a><br />
+<br />
+Das neue Moodle ist hier:<br />
+<a href="https://gpb-digital.de/" target="moodle">https://gpb-digital.de</a><br />
+<a href="https://gpb-digital.de/" target="moodle"><img src="moodlestartseite.png" title="Neues Moodle: Startseite" /></a>
+<a href="https://gpb-digital.de/login/index.php" target="moodle"><img src="moodlelogin.png" title="Neues Moodle: Login-Seite" /></a>
+<br />
+<p class="wichtig">Nutzernamen und Passwort sind für beide identisch.</p>
+<br />
+Normalerweise sollten sie auch identisch mit Nutzernamen und Passwort aus dem alten System sein. Falls nicht, bitte Kundenservice
+oder Technik kontaktieren, sie wissen, wie man das gemeinsame Passwort zurücksetzt.
+</section>
+
+<section id="Ansprechpartner">
+<h2>Ansprechpartner</h2>
+Kundenservice und Institutsleitung helfen Ihnen gerne!<br />
+<br />
+Vorschläge und Wünsche bezüglich der neuen Werkzeuge sind sehr willkommen! Allerdings kann die Umsetzung etwas dauern, bitte Geduld.
+</section>
+
+<section id="Moodle zu Veraltungstools">
+<h2>Navigation von Moodle zu den Verwaltungstools</h2>
+Im neuen Moodle können Sie die rechte Spalte aufklappen und auf den Link "Unterrichtsdokumentation" klicken, um zu den neuen Verwaltungstools zu kommen.<br />
+<img src="moodledashboard_zugeklappt.png" title="Neues Moodle: GPB-Block anzeigen" />
+<img src="moodledashboard_aufgeklappt.png" title="Neues Moodle: Link &quot;Unterrichtsdokumentation&quot;" />
+</section>
+
+<section id="Anwesenheit">
+<h2>Anwesenheit</h2>
+Wenn ein Kurs gerade läuft, wo Sie als Dozent eingetragen sind, wird die Anwesenheitstabelle auf der Startseite der neuen Verwaltungstools angezeigt:<br />
+<a href="https://verwaltung.gpbmedien.de/dozent/" target="gpb"><img src="anwesenheit.png" title="Anwesenheit" /></a><br />
+<br />
+<p class="wichtig">Jeder Eintrag in die Tabelle wird sofort gespeichert (keine Diskette mehr zum Speichern!).</p>
+<p class="wichtig">Sobald ein Feld markiert ist, können Sie auch mit der Tastatur arbeiten (A, O, F, ...).</p>
+</section>
+
+<section id="Kurse suchen">
+<h2>Kurse suchen</h2>
+In den neuen Verwaltungstools können Sie Kurse suchen.<br />
+<img src="dozentenkurse_suchen.png" title="Kurse suchen" /><br />
+<p class="wichtig">Die Checkbox "unvollständig" hilft Ihnen, die Kurse zu finden, wo noch etwas eingetragen werden muss (Berichterstattung, Noten: siehe unten).</p>
+</section>
+
+<section id="Verwaltungstools zu Moodle">
+<h2>Navigation von den Verwaltungstools zu Moodle</h2>
+Die Navigation zu Moodle erfolgt über den Link "Moodle-ID".<br />
+<img src="dozentenkurse_moodlelink.png" title="Gefundene Kurse: Moodle-Link" />
+</section>
+
+<section id="IL_Klausuren">
+<h2>IL und Klausuren</h2>
+Wenn der Kundenservice einen Kurs anlegt, werden automatisch leere Aufgaben für die betroffenen Tage erstellt: IL-Aufgaben, Klausur und Nachklausur.<br />
+<img src="moodlekurs_ilaufgaben.png" title="Neues Moodle: automatisch generierte IL-Aufgaben" /><br />
+Sie können diese Moodle-Aufgaben bearbeiten und Konfigurieren, um einen Aufgabentext hinzuzufügen.
+<img src="moodlekurs_ilaufgaben_bearbeiten.png" title="Neues Moodle: IL-Aufgaben bearbeiten" /><br />
+Sie können auch neue Aufgaben und andere Moodle-Tätigkeiten hinzufügen.<br />
+<p class="wichtig">Alle Moodle-Tätigkeiten, deren Titel mit "IL" anfängt, werden als IL-Aufgaben ausgewertet.</p><br />
+(Im alten Moodle war das ein @ am Ende des Titels.)<br />
+<p class="wichtig">Tätigkeiten, deren Titel mit "Klausur" oder "Nachklausur" anfängt, werden als solche ausgewertet.</p><br />
+In der Ausbildungsdokumentation finden Sie diese Tätigkeiten, indem Sie auf den "IL+Noten"-Link eines Kurses klicken.<br />
+<img src="dozentenkurse_ilnotenlink.png" title="Dozentenkurse: IL+Noten-Link" /><br />
+<img src="dozent_ilklausuren.png" title="Automatische Auswertung der IL- und Klausur-Tätigkeiten" />
+</section>
+
+<section id="Noten">
+<h2>Noten</h2>
+Noten bitte in der Ausbildungsdokumentation unter dem Link "IL+Noten" des Kurses vergeben.<br />
+<img src="dozentenkurse_ilnotenlink.png" title="Dozentenkurse: IL+Noten-Link" /><br />
+Sie können je nach Kurs entweder "Keine Noten" ankreuzen oder Noten eintragen und speichern.<br />
+<img src="dozent_noten.png" title="Noten eintragen" />
+</section>
+
+<section id="Berichte">
+<h2>Berichterstattung</h2>
+In der Ausbildungsdokumentation führen die Links "Kurzbericht" und "Tagesbericht" der Kurse zu den entsprechenden auszufüllenden Formulare.<br />
+<img src="dozentenkurse_berichtlinks.png" title="Dozentenkurse: Links zur Berichterstattung" /><br />
+<img src="dozent_kurzbericht.png" title="Kurzbericht-Formular" /><br />
+<img src="dozent_tagesbericht.png" title="Tagesbericht-Formular" /><br />
+Wenn Sie diesen Kurs schon gegeben haben, können Sie die Berichte übernehmen und bearbeiten.<br />
+<p class="wichtig">Vergessen Sie nicht zu speichern und bei vollständigem Bericht zu bestätigen!</p>
+</section>
+
+<section id="Kursvorlagen">
+<h2>Kursvorlagen</h2>
+In den Verwaltungstools finden Sie unter "Kursvorlagen" eine Möglichkeit, Ihre Vorlagen zu verwalten.<br />
+<img src="dozent_kursvorlagen_link.png" title="Verwaltungstools: Link zu Kursvorlagen" /><br />
+<img src="dozent_kursvorlagen_bearbeitenlinks.png" title="Verwaltungstools: Kursvorlagen, &quot;bearbeiten&quot;-Links" /><br />
+Beim Anlegen oder Bearbeiten einer Kursvorlage können Sie bestimmen, ob Kollegen diese Vorlage sehen/bearbeiten/benutzen dürfen. Die linke Spalte des 
+Bearbeitungsformulars enthält die eingetragenen Dozenten; die rechte Spalte ermöglicht es, weitere Kollegen zu suchen und einzutragen.<br />
+<img src="dozent_kursvorlage_bearbeiten.png" title="Verwaltungstools: Kursvorlage bearbeiten" /><br />
+Beim Anlegen einer Kursvorlage wird ein leerer Moodle-Kurs erstellt. Diesen erreichen Sie mit den üblichen "Moodle-ID"-Links.<br />
+<img src="dozent_kursvorlagen_moodlelink.png" title="Verwaltungstools: Kursvorlagen, &quot;Moodle-ID&quot;-Link" /><br />
+Mit Hilfe der Funktion "Kurse wiederverwenden" können Sie den Inhalt der Vorlage aus dem
+alten Moodle oder aus einem anderen Kurs importieren. Die weitere Bearbeitung erfolgt wie bei jedem anderen Moodle-Kurs auch.<br />
+<img src="moodle_kursvorlage.png" title="Moodle: Kursvorlage" /><br />
+Sie finden die gleiche Funktion "Kurse wiederverwenden" auch in den IL-Kursen und können dort den Inhalt der Vorlage importieren.
+</section>
+
+<section id="Kursbewertung">
+<h2>Kursbewertung</h2>
+Wenn der Kundenservice einen Kurs anlegt, wird automatisch am letzten Kurstag ein Link zur Kursbewertung erstellt.<br />
+Dieser Link führt zum Teilnehmerbereich der Ausbildungsdokumentation.<br />
+<img src="moodle_kursbewertungslink.png" title="Neues Moodle: Link &quot;Kurs bewerten&quot;" /><br />
+Als Dozent finden Sie die Bewertung Ihres Kurses durch die Teilnehmer unter dem Link "Bewertung".<br />
+<img src="dozentenkurse_bewertungslink.png" title="Dozentenkurse: Link zu den Noten" /><br />
+<img src="dozent_kursbewertung.png" title="Kursbewertung" /><br />
+</section>
+
+<section id="Reparatur">
+<h2>Wenn etwas fehlt</h2>
+<h3>IL-Aufgabe zu schnell gelöscht</h3>
+Einfach eine Moodle-Aufgabe anlegen (oder eine beliebige andere Moodle-Tätigkeit: Test, Link, Textseite, ...) und dieser einen Titel geben, der mit "IL" anfängt.<br />
+Diese Aufgabe wird dann in den Verwaltungstools in der IL-Auswertung gefunden (Seite "IL+Noten").
+
+<h3>Klausur oder Nachklausur fehlt</h3>
+Einfach eine Moodle-Aufgabe anlegen (oder eine beliebige andere Moodle-Tätigkeit: Test, Link, Textseite, ...) und dieser den Titel "Klausur" oder "Nachklausur" geben.<br />
+Diese Aufgabe wird dann in den Verwaltungstools auf der Seite "IL+Noten" gefunden.<br />
+Eine automatische Übertragung von Noten oder Punkten von Moodle zu den Verwaltungstools findet nicht statt, 
+die Noten müssen per Hand in den Verwaltungstools eingetragen werden (dabei bitte die IL-Aufgaben in die Note einbeziehen).
+
+<h3>Link "Kurs bewerten" fehlt</h3>
+Ab dem letzten Tag des Kurses finden die Teilnehmer den Kurs mit einem Link "Kurs bewerten" im Teilnehmerbereich der Verwaltungstools: auf 
+<a href="https://verwaltung.gpbmedien.de/verwaltung/login.php" target="gpbtn">https://verwaltung.gpbmedien.de/tn</a> verweisen.<br />
+Teilnehmer-Ansicht:<br />
+<img src="tnkurse_bewertungslink.png" title="Teilnehmerbereich: Link zur Kursbewertung" /><br />
+Dieser Link ist für alle Teilnehmer identisch (aber nicht für alle Kurse!) und kann in den Moodle-Kurs hinzugefügt werden.<br />
+<br />
+Um den Link zur Kursbewertung schon vor dem letzten Tag des Kurses ins Moodle wieder hinzuzufügen, brauchen Sie die Moodle-ID des Kurses.
+Bitte erstmal nur die ID (Zahl) notieren.<br />
+<img src="dozentenkurse_moodlelink.png" title="Dozentenkurse: Moodle-ID" /><br />
+Dann lautet die Link-Adresse, die in den Moodle-Kurs eingetragen werden kann:<br />
+<blockquote>https://verwaltung.gpbmedien.de/tn/kurs_bewertung.php?kursmoodleid=<i>hier die Moodle-ID</i></blockquote>
+Unbedingt Copy-Pasten und nicht abtippen!
+</section>
+</body>
+</html>

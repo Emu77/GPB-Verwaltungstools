@@ -1,5 +1,0 @@
-AuthUserFile /var/www/vhosts/verwaltung.gpbmedien.de/secret/.internpass
-AuthGroupFile /dev/null
-AuthName "GPB intern"
-AuthType Basic
-Require valid-user
