@@ -1,5 +1,5 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 $kopie=isset($_GET['kopie']) && $_GET['kopie']!='N';
 $bezeichnung=isset($_GET['bezeichnung']) ? $_GET['bezeichnung'] : '';
 $stmt=$db->prepare("insert into gpb_planungkonfig(bezeichnung) values(?)");

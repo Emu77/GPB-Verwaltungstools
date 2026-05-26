@@ -1,5 +1,5 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 if(!isset($_SESSION['planungkonfigid']) || empty($_SESSION['planungkonfigid'])) {
   header('Location:planung.php');
   exit;

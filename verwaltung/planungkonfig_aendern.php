@@ -1,5 +1,5 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 
 $bezeichnung=isset($_GET['bezeichnung']) ? $_GET['bezeichnung'] : false;
 if($bezeichnung && isset($_SESSION['planungkonfigid']) && !empty($_SESSION['planungkonfigid'])) {

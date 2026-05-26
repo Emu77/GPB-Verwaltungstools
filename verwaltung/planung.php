@@ -1,9 +1,9 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 require_once '../Liste.php';
 require_once '../Kurs.php';
 require_once '../Ferien.php';
-require_once 'DozentVerfuegbarkeit.php';
+require_once '../leitung/DozentVerfuegbarkeit.php';
 
 $konfigid=isset($_SESSION['planungkonfigid']) && !empty($_SESSION['planungkonfigid']) ? $_SESSION['planungkonfigid'] : 0;
 $konfig=null;
@@ -133,8 +133,8 @@ $ferien=new Liste('Ferien',$db->prepare("select f.* from gpb_ferien f
     .")"));
 Ferien::refsLaden($ferien);
 
-require_once 'LeitungSeite.php';
-$seite=LeitungSeite::$menueByUrl['../leitung/planung.php'];
+require_once '../leitung/LeitungSeite.php';
+$seite=LeitungSeite::$menueByUrl['../verwaltung/planung.php'];
 $seite->anfangGenerieren();
 ?>
 <div id="topbereich">

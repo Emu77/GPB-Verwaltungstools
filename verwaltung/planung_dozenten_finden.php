@@ -1,5 +1,5 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 $name=isset($_GET['name']) ? $_GET['name'] : false;
 $dozenten=array();
 if(!empty($name)) {

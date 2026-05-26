@@ -19,6 +19,6 @@ class LeitungSeite extends VerwaltungSeite {
     parent::endeGenerieren();
   }
 }
-Seite::$menueByUrl['../leitung/planung.php']=new LeitungSeite('Planung');
+Seite::$menueByUrl['../verwaltung/planung.php']=new LeitungSeite('Planung');
 Seite::$menueByUrl['../leitung/bewertung.php']=new LeitungSeite('Bewertungen');
 ?>

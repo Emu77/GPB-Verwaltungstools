@@ -1,5 +1,5 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 if(isset($_GET['beginn'])) {
   if(empty($_GET['beginn'])) {
     if(isset($_SESSION['planungbeginn'])) {

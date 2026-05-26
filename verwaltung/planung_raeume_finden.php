@@ -1,5 +1,5 @@
 <?php
-require_once 'check_login.php';
+require_once '../leitung/check_login.php';
 $tuer=isset($_GET['tuer']) ? $_GET['tuer'] : false;
 $raeume=array();
 if(!empty($tuer)) {

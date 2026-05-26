@@ -1,6 +1,6 @@
 <?php
-require_once 'check_login.php';
-require_once 'DozentVerfuegbarkeit.php';
+require_once '../leitung/check_login.php';
+require_once '../leitung/DozentVerfuegbarkeit.php';
 function check(&$toFill,$query,$params,$values) {
   global $db;
   $stmt=$db->prepare($query);
