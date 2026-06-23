@@ -15,10 +15,11 @@ $gender=isset($_GET['gender']) && $_GET['gender']!='N';
 $zeugnisart=isset($_GET['zeugnisart']) && $_GET['zeugnisart']=='Zwischenzeugnis' ? 'Zwischenzeugnis' : 'Notenauszug';
 
 // Zeitraum laden
-$result=$db->query("select min(mtn.einstieg) as einstieg,max(mtn.ausstieg) as ausstieg,max(m.ende) as ende
+$result=$db->query("select min(mtn.einstieg) as einstieg,max(case when mtn.ausstieg is null or mtn.ausstieg='0000-00-00' then m.ende else mtn.ausstieg end) as ausstieg,max(m.ende) as ende
 from gpb_massnahme_tn mtn
 join gpb_massnahme m on m.id=mtn.massnahmeid
-where mtn.tnid=".$tn->id);
+where  mtn.tnid=".$tn->id."
+  and mtn.einstieg is not null and mtn.einstieg<>'0000-00-00'");
 $zeitraum=$result->fetch_object();
 $result->free();
 // Beruf laden
@@ -43,7 +44,6 @@ Kurs::refsLaden($kurse);
 //Kurse nach Modul-ID gruppieren
 class Kursgruppe {
   function __construct($ersterkurs) {
-    $this->modulid=$ersterkurs->modulid;
     $this->modultitel=$ersterkurs->modultitel;
     $this->kurse=array();
     $this->kursedauer=0;
@@ -82,14 +82,14 @@ class Kursgruppe {
   }
 }
 $kursgruppen=array();
-$kursgruppenByModulid=array();
+$kursgruppenByModultitel=array();
 foreach($kurse->alle as $k) {
-  if(isset($kursgruppenByModulid[$k->modulid])) {
-    $kursgruppenByModulid[$k->modulid]->addKurs($k);
+  if(isset($kursgruppenByModultitel[$k->modultitel])) {
+    $kursgruppenByModultitel[$k->modultitel]->addKurs($k);
   } else {
     $kg=new Kursgruppe($k);
     $kursgruppen[]=$kg;
-    $kursgruppenByModulid[$k->modulid]=$kg;
+    $kursgruppenByModultitel[$k->modultitel]=$kg;
   }
 }
 
@@ -146,7 +146,7 @@ $kursedauer=0;
 $punktesumme=0;
 $punktedauer=0;
 foreach($kursgruppen as $kg) {
-  if(empty($kg->modulid) || empty($ausbildungenById)) {
+  if(empty($kg->modultitel) || empty($ausbildungenById)) {
     $ausb=$zusaetzlich;
   } else {
     // Modul mit diesem Titel in den Berufen des TN suchen
@@ -176,7 +176,7 @@ foreach($ausbildungen as $ausb) {
   $ausb->anzahlZeilen; //1 oder 2 für den Titel der Ausbildung
   $anzahlZeilen+=2; 
   foreach($ausb->kursgruppen as $kg) {
-    if($kg->modulid<=0) { // Kurse ohne Modul werden nicht gruppiert
+    if(empty($kg->modultitel)) { // Kurse ohne Modul werden nicht gruppiert
       foreach($kg->kurse as $kurs) {
         $ausb->anzahlZeilen+=2; //und haben lange Titel
         $anzahlZeilen+=2;
@@ -327,7 +327,7 @@ foreach($ausbildungen as $ausb) {
   $maxAnzahlZeilen-=$anz;
   $pdf->SetFont('DejaVuSans','',$mm2pt*3.5);
   foreach($ausb->kursgruppen as $kg) {
-    if($kg->modulid<=0) { // Kurse ohne Modul werden nicht gruppiert
+    if(empty($kg->modultitel)) { // Kurse ohne Modul werden nicht gruppiert
       foreach($kg->kurse as $kurs) {
         $pdf->SetXY($x0,$y);
         $titel=str_replace('_',' ',$kurs->titel);

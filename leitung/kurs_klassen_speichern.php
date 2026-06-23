@@ -3,7 +3,7 @@ require_once 'check_login.php';
 $kursid=isset($_GET['kursid']) ? (int)$_GET['kursid'] : 0;
 $kursmoodleid=isset($_GET['kursmoodleid']) ? (int)$_GET['kursmoodleid'] : 0;
 $klassenids=isset($_GET['klassenids']) ? json_decode($_GET['klassenids']) : null;
-if($kursid>0 && $klassenids!=null) {
+if($kursid>0 && $klassenids!==null) {
   $db->query("delete from gpb_kurs_klasse where kursid=".$kursid);
   if(!empty($klassenids)) {
     $values=array();

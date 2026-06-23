@@ -89,6 +89,8 @@ foreach($kurse->alle as $kurs) {
   $kurs->makeKlassenText();
 }
 function kurse_vergleichen($k0,$k1) {
+  $d=$k0->phase-$k1->phase;
+  if($d!=0) return $d;
   $d=strcasecmp($k0->klassenText,$k1->klassenText);
   if($d!=0) return $d;
   $d=strcasecmp($k0->ort,$k1->ort);
@@ -120,15 +122,29 @@ function neuladen() {
 }
 setTimeout(neuladen,60*60*1000);
 </script>
+<script type="module">
+if(document.body.scrollHeight>window.innerHeight) {
+  let els=document.getElementsByClassName('phasentitel');
+  for(let i=els.length-1;i>=0;--i) {
+    els[i].style.display='none';
+  }
+}
+</script>
 <style>
 th, td {
   text-align: left;
 }
 tr:nth-child(even) {
-  background-color: #eab80f;
+  background-color: #EFAA23;
 }
 tr:nth-child(odd) {
-  background-color: #dadada;
+  background-color: #DADADA;
+}
+tr.phasentitel {
+  background-color:white;
+}
+.phasentitel td {
+  font-weight:bold;
 }
 a {
   text-decoration:none;
@@ -148,16 +164,23 @@ td:nth-child(3), th:nth-child(3) {
 ?>
 </style>
 <table border="0" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;">
-  <tr>
+  <!-- tr>
     <th>KW</th>
     <th>Klassen</th>
     <th>Ort</th>
     <th>Raum</th>
     <th>Dozent</th>
     <th>Modul</th>
-  </tr>
+  </tr -->
 <?php
+$phase=0;
 foreach($kurse->alle as $kurs) {
+  if($kurs->phase!=$phase) {
+    $phase=$kurs->phase;
+?>
+  <tr class="phasentitel"><td colspan="6"><br /><?= InternKurs::$phasen[$phase] ?></td></tr>
+<?php
+  }
 ?>
   <tr>
 <?php

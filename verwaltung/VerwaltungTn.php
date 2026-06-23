@@ -189,14 +189,18 @@ class VerwaltungTn extends Tn {
     $this->makeMoodleTd();
 ?>
   </tr>
-<?php if($ich->massnahmenanzeigen) { ?>
+<?php 
+    if($ich->massnahmenanzeigen) { 
+?>
   <tr>
     <th>Maßnahmen</th>
 <?php
-    $this->makeMassnahmenTd();
+      $this->makeMassnahmenTd();
 ?>
   </tr>
-<?php } ?>
+<?php
+    }
+?>
   <tr>
     <th>Klassen</th>
 <?php

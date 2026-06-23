@@ -90,7 +90,7 @@ $seite->anfangGenerieren();
         alert(req.responseText);
       }
     };
-    req.open('GET','module_finden.php?titel='+encodeURIComponent(titel));
+    req.open('GET','beruf_module_finden.php?titel='+encodeURIComponent(titel));
     req.send();
   }
   function modul_hinzufuegen() {

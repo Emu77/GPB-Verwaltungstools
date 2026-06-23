@@ -20,15 +20,31 @@ class Tn {
   static function refsMassnahmenLaden($liste) {
     global $db;
     if(empty($liste->byId)) return;
+    foreach($liste->alle as $tn) {
+      $tn->EABmassnahme=null;
+    }
     $result=$db->query("select mtn.* 
-      ,m.kuerzel,m.titel
+      ,m.kuerzel,m.titel,m.beginn,m.ende
       from gpb_massnahme_tn mtn
       left outer join gpb_massnahme m on m.id=mtn.massnahmeid
       where mtn.tnid in(".implode(',',array_keys($liste->byId)).") order by mtn.einstieg,mtn.ausstieg");
     while($row=$result->fetch_object()) {
       $row->von=empty($row->einstieg) || $row->einstieg=='0000-00-00' ? 0 : strtotime($row->einstieg);
       $row->bis=empty($row->ausstieg) || $row->ausstieg=='0000-00-00' ? 0 : strtotime($row->ausstieg);
-      $liste->byId[$row->tnid]->massnahmen[]=$row;
+      $tn=$liste->byId[$row->tnid];
+      $tn->massnahmen[]=$row;
+      if(strtoupper(substr($row->kuerzel,0,3))=='EAB') {
+        if(!$tn->EABmassnahme) {
+          $tn->EABmassnahme=$row;
+        } else {
+          $heute=date('Y-m-d');
+          if($row->beginn<=$heute && $row->ende>=$heute && !($tn->EABmassnahme->beginn<=$heute && $tn->EABmassnahme->ende>=$heute)) {
+            $tn->EABmassnahme=$row;
+          } else if($row->beginn.'-'.$row->ende>$tn->EABmassnahme->beginn.'-'.$tn->EABmassnahme->ende) {
+            $tn->EABmassnahme=$row;
+          }
+        }
+      }
     }
     $result->free();
   }
@@ -93,8 +109,9 @@ class Tn {
   }
   function massnahmenLaden() {
     global $db;
+    $this->EABmassnahme=null; 
     $result=$db->query("select mtn.* 
-      ,m.kuerzel,m.titel
+      ,m.kuerzel,m.titel,m.beginn,m.ende
       from gpb_massnahme_tn mtn
       left outer join gpb_massnahme m on m.id=mtn.massnahmeid
       where mtn.tnid=".$this->id." order by mtn.einstieg,mtn.ausstieg");
@@ -107,6 +124,18 @@ class Tn {
       }
       if($this->bis<=0 || $this->bis<$row->bis) {
         $this->bis=$row->bis;
+      }
+      if(strtoupper(substr($row->kuerzel,0,3))=='EAB') {
+        if(!$this->EABmassnahme) {
+          $this->EABmassnahme=$row;
+        } else {
+          $heute=date('Y-m-d');
+          if($row->beginn<=$heute && $row->ende>=$heute && !($this->EABmassnahme->beginn<=$heute && $this->EABmassnahme->ende>=$heute)) {
+            $this->EABmassnahme=$row;
+          } else if($row->beginn.'-'.$row->ende>$this->EABmassnahme->beginn.'-'.$this->EABmassnahme->ende) {
+            $this->EABmassnahme=$row;
+          }
+        }
       }
     }
     $result->free();

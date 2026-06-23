@@ -13,13 +13,15 @@ $ausgeschlosseneKlassentypen=array(
   'InTrain'
 );
 $eingeschlosseneKlassen=array();
+//echo "Lade Sonderimports...<br />\n";
 foreach(explode("\n",file_get_contents('zusaetzlicheklassen.txt')) as $z) {
   $z=trim($z);
   if(empty($z)) continue;
   if(substr($z,0,2)=='//' || substr($z,0,1)=='#' || substr($z,0,1)==';') continue;
   $eingeschlosseneKlassen[]=$z;
+//  echo $z."<br />\n";
 }
-
+//echo "<br />\n";
 
 $MKlassenByMid=array();
 $f=fopen($_FILES['MitisExportKlasse']['tmp_name'],'rt');
@@ -131,6 +133,20 @@ foreach($MKlassenByMid as $mitisid=>$orig) {
         $updatemoodlestmt->execute();
       }
       echo "Klasse ".$orig[1]." mitisid=".$orig[0]." Moodle Klassenkurs ID=".$ergebnis->id." gespeichert.<br />\n";
+      // Anmeldung in Info-Kurs
+      $bez=mb_strtolower($orig[1]);
+      if(mb_strpos($bez,'intrain')===false && mb_strpos($bez,'prak')===false && mb_strpos($bez,'pv')===false) {        
+        $daten=(object)array(
+          'kursid'=>'GPB Guide',
+          'klassencourseids'=>array($moodleid),
+          'ersetzen'=>false
+        );
+        $url=$moodleurl.'webservice/rest/server.php?wstoken='.$moodletoken.'&wsfunction=local_gpbwebservice_bearbeite_anfragen&moodlewsrestformat=json&aktion=meta_einschreibung&daten='.urlencode(json_encode($daten));
+        $ergebnis=json_decode(file_get_contents($url));
+        if($ergebnis!='ok' && $ergebnis!='"ok"') {
+          echo "Klasse ".$orig[1]." mitisid=".$orig[0]." Anmeldung in GPB Guide nicht OK: ".json_encode($ergebnis)."<br />\n";
+        }
+      }
       //Arbeitsschutz
       // TODO einkommentieren, wenn Plugin installiert
 //      $daten=(object)array(

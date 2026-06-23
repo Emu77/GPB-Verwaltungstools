@@ -45,7 +45,7 @@ while($row=$result->fetch_object()) {
 $result->free();
 $module=array();
 $moduleById=array();
-$result=$db->query("select m.* from gpb_intrainmodul m order by m.titel");
+$result=$db->query("select m.*,case when kurzbezeichnung like '%BBI%' then true else false end as istBBI from gpb_intrainmodul m order by m.titel");
 while($row=$result->fetch_object()) {
   $module[]=$row;
   $moduleById[$row->id]=$row;
@@ -183,8 +183,9 @@ usort($moduleNachAnfang,'moduleVergleichen');
 $angebote=array();
 $ang=null;
 foreach($moduleNachAnfang as $mod) {
-  if($ang==null || $ang->zertifid!=$mod->zertifid) {
+  if($ang==null || $ang->zertifid!=$mod->zertifid || $ang->istBBI!=$mod->istBBI) {
     $ang=(object)array(
+      'istBBI'=>$mod->istBBI,
       'zertifid'=>$mod->zertifid,
       'preis'=>$mod->preis,
       'anzahlue'=>$mod->anzahlue,
@@ -260,6 +261,9 @@ $pdf->setPrintFooter(false);
 $pdf->SetMargins(15,10,15,true);
 $pdf->SetAutoPageBreak(false,10);
 
+$seiten=array();
+$seitennummer=0;
+
 foreach($angebote as $ang) {
   $zertif=isset($zertifsById[$ang->zertifid]) ? $zertifsById[$ang->zertifid] : null;
   $massnnr=empty($zertif) ? '' : ($zeitmodell=='Vollzeit' ? $zertif->vollzeit_massnnr : $zertif->teilzeit_massnnr);
@@ -288,6 +292,7 @@ foreach($angebote as $ang) {
     ,'AUSBILDUNGSENDE'=>date('d.m.Y',$ang->bis)
     ,'AUSBILDUNGSDAUER'=>$ang->anzahlue
     ,'AUSBILDUNGSMASSNAHMENUMMER'=>(empty($massnnr) ? 'wird nach Bildungsgutschein erteilt' : $massnnr)
+    ,'MASSNAHMENUMMERSATZ'=>(empty($massnnr) ? 'Die Maßnahmenummer wird nach Einreichung des Bildungsgutscheins beantragt.' : 'Maßnahmenummer: '.$massnnr.'.')
     ,'AUSBILDUNGSZERTIFZEITRAUM'=>(empty($zertif) || empty($zertif->zertif_beginn) || $zertif->zertif_beginn=='0000-00-00' || empty($zertif->zertif_ende) || $zertif->zertif_ende=='0000-00-00' ? 'in Zertifizierung' : date('d.m.Y',$zertif->zertif_von).' bis '.date('d.m.Y',$zertif->zertif_bis))
     ,'ZEITMODELL'=>$zeitmodell
     ,'ANZAHLUEPROWOCHE'=>($zeitmodell=='Vollzeit' ? $vollzeit_wochenue : $wochenue)
@@ -336,7 +341,7 @@ foreach($angebote as $ang) {
     }
   }
   
-  $inhalt=file_get_contents('vorlagen/QualifizierungsangebotIntrain.html');
+  $inhalt=file_get_contents($ang->istBBI ? 'vorlagen/QualifizierungsangebotBBI.html' : 'vorlagen/QualifizierungsangebotIntrain.html');
   foreach($ersetzungen as $k=>$v) {
     if($v===null) continue;
     $inhalt=str_replace($k,$v,$inhalt);
@@ -374,6 +379,8 @@ foreach($angebote as $ang) {
   $seite3=mb_substr($inhalt,$i0,$i1-$i0);
   
   $pdf->AddPage();
+  ++$seitennummer;
+  $seiten[$seitennummer]=$ang->istBBI;
   $pdf->SetFont('DejaVuSans','',11);
   $pdf->WriteHTML($header,false,false,false,false,'C');
   $pdf->SetFont('DejaVuSans','',11);
@@ -383,6 +390,8 @@ foreach($angebote as $ang) {
   $pdf->WriteHTML($footer,false,false,false,false,'C');
   
   $pdf->AddPage();
+  ++$seitennummer;
+  $seiten[$seitennummer]=$ang->istBBI;
   $pdf->SetFont('DejaVuSans','',11);
   $pdf->WriteHTML($header,false,false,false,false,'C');
   $pdf->SetFont('DejaVuSans','',11);
@@ -392,6 +401,8 @@ foreach($angebote as $ang) {
   $pdf->WriteHTML($footer,false,false,false,false,'C');
   
   $pdf->AddPage();
+  ++$seitennummer;
+  $seiten[$seitennummer]=$ang->istBBI;
   $pdf->SetFont('DejaVuSans','',11);
   $pdf->WriteHTML($header,false,false,false,false,'C');
   $pdf->SetFont('DejaVuSans','',11);
@@ -404,7 +415,7 @@ foreach($angebote as $ang) {
 if(!empty($ich->signaturbild) && file_exists('signaturbilder/'.$ich->signaturbild)) {
   for($n=$pdf->getNumPages(),$i=1;$i<=$n;$i+=3) {
     $pdf->setPage($i);
-    $pdf->Image('signaturbilder/'.$ich->signaturbild,50,175,40);
+    $pdf->Image('signaturbilder/'.$ich->signaturbild,50,$seiten[$i] ? 220 : 175,40);
   }
 }
 

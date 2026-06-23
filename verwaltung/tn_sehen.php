@@ -114,6 +114,25 @@ if(!empty($tn->fehlzeiten_notiz)) {
 </form>
 <?php
 }
+if(!empty($tn->EABmassnahme)) {
+  $schuljahr=(int)date('Y')+(date('m')>='08' ? 0 : -1);
+?>
+<form action="tn_bafoegformblatt2_pdf.php" method="post" enctype="multipart/form-data" accept-charset="UTF-8" style="margin-bottom:2em;">
+  <input type="hidden" name="tnid" value="<?= $tn->id ?>" />
+  <b>BAföG Formblatt 2</b><br />
+  <select name="schuljahr">
+<?php
+  for($j=$schuljahr-5;$j<=$schuljahr+5;++$j) {
+?>
+    <option value="<? $j ?>" <?= $j==$schuljahr ? 'selected' : '' ?>><?= $j ?>/<?= $j+1 ?></option>
+<?php
+  }
+?>
+  </select>
+  <input type="submit" value="PDF generieren" />
+</form>
+<?php
+}
 ?>
 <a href="tn.php">Zurück zur Suche</a>
 <?php

@@ -19,7 +19,7 @@ $ausgeschlosseneMitisids=array(
 $MTNByMid=array();
 $f=fopen($_FILES['MitisExportTeilnehmer']['tmp_name'],'rt');
 
-//StammdatenID;Anrede;Vorname;Nachname;p_email;GebDat;
+//StammdatenID;Anrede;Vorname;Nachname;p_email;GebDat;GebOrt;
 fgetcsv($f,null,';',' ');
 while($row=fgetcsv($f,null,';','"')) {
   if(in_array((int)$row[0],$ausgeschlosseneMitisids)) continue;
@@ -58,9 +58,9 @@ while($row=$result->fetch_object()) {
 $result->free();
 
 echo "Daten korrigieren...<br />\n";
-$updatestmt=$db->prepare("update gpb_tn set mitisanrede=?,mitisvorname=?,anrede=?,vorname=?,nachname=?,email=?,geburtsdatum=? where id=? limit 1");
-$updatestmtgender=$db->prepare("update gpb_tn set mitisanrede=?,mitisvorname=?,nachname=?,email=?,geburtsdatum=? where id=? limit 1");
-$insertstmt=$db->prepare("insert into gpb_tn(mitisid,mitisanrede,mitisvorname,anrede,vorname,nachname,email,geburtsdatum) values(?,?,?,?,?,?,?,?)"); //Berufid haben wir hier nicht, kommt mit der Zuweisung zu Maßnahmen
+$updatestmt=$db->prepare("update gpb_tn set mitisanrede=?,mitisvorname=?,anrede=?,vorname=?,nachname=?,email=?,geburtsdatum=?,geburtsort=? where id=? limit 1");
+$updatestmtgender=$db->prepare("update gpb_tn set mitisanrede=?,mitisvorname=?,nachname=?,email=?,geburtsdatum=?,geburtsort=? where id=? limit 1");
+$insertstmt=$db->prepare("insert into gpb_tn(mitisid,mitisanrede,mitisvorname,anrede,vorname,nachname,email,geburtsdatum,geburtsort) values(?,?,?,?,?,?,?,?,?)"); //Berufid haben wir hier nicht, kommt mit der Zuweisung zu Maßnahmen
 $nutzernamenstmt=$db->prepare("select id from gpb_tn where nutzername=?"
   ." union all select id from gpb_dozent where nutzername=?"
   ." union all select id from gpb_verwalter where nutzername=?");
@@ -77,17 +77,19 @@ foreach($MTNByMid as $mitisid=>$orig) {
     $moodleid=$dest->moodleid;
     $nutzername=$dest->nutzername;
     if(!isset($orig[5]) || $orig[5]=='null' || $orig[5]=='0000-00-00' || empty($orig[5])) $orig[5]=$dest->geburtsdatum;
+    if(!isset($orig[6]) || $orig[6]=='null' || empty($orig[6])) $orig[6]=$dest->geburtsort;
     //Passwort wird hier nicht geändert
     if($dest->anrede!=$orig[1]
       || $dest->vorname!=$orig[2]
       || $dest->nachname!=$orig[3]
       || $dest->email!=$orig[4]
-      || $dest->geburtsdatum!=$orig[5]) {
+      || $dest->geburtsdatum!=$orig[5]
+      || $dest->geburtsort!=$orig[6]) {
         if($dest->anrede==$dest->mitisanrede && $dest->vorname==$dest->mitisvorname) {
-          $updatestmt->bind_param('sssssssi',$orig[1],$orig[2],$orig[1],$orig[2],$orig[3],$orig[4],$orig[5],$dest->id);
+          $updatestmt->bind_param('ssssssssi',$orig[1],$orig[2],$orig[1],$orig[2],$orig[3],$orig[4],$orig[5],$orig[6],$dest->id);
           $updatestmt->execute();
         } else { //bei Gender nur die MITIS-Daten korrigieren
-          $updatestmtgender->bind_param('sssssi',$orig[1],$orig[2],$orig[3],$orig[4],$orig[5],$dest->id);
+          $updatestmtgender->bind_param('ssssssi',$orig[1],$orig[2],$orig[3],$orig[4],$orig[5],$orig[6],$dest->id);
           $updatestmtgender->execute();
           $vorname=$dest->vorname;
         }
@@ -96,7 +98,8 @@ foreach($MTNByMid as $mitisid=>$orig) {
     }
   } else {
     if(!isset($orig[5]) || $orig[5]=='null' || $orig[5]=='0000-00-00' || empty($orig[5])) $orig[5]='2050-01-01';
-    $insertstmt->bind_param('ssssssss',$mitisid,$orig[1],$orig[2],$orig[1],$orig[2],$orig[3],$orig[4],$orig[5]);
+    if(!isset($orig[6]) || $orig[6]=='null' || empty($orig[6])) $orig[6]='';
+    $insertstmt->bind_param('sssssssss',$mitisid,$orig[1],$orig[2],$orig[1],$orig[2],$orig[3],$orig[4],$orig[5],$orig[6]);
     $insertstmt->execute();
     $id=$db->insert_id;
     echo "TN ".$orig[2]." ".$orig[3]." mitisid=".$orig[0]." hinzugefügt.<br />\n";

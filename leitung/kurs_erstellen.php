@@ -29,7 +29,7 @@ if(!empty($beginn) && $dauer>0 && ($einheit=='Wochen' || $einheit=='Tage')) {
   }
   //FIXME Kurstitel berechnen
   $titel=$beginn.' geplanter Kurs';
-  $stmt=$db->prepare("insert into gpb_kurs(titel,beginn,ende,raumid) values(?,?,?,?)");
+  $stmt=$db->prepare("insert into gpb_kurs(titel,beginn,ende,raumid,planungfarbe) values(?,?,?,?,'#ff0000')");
   $stmt->bind_param('sssi',$titel,$beginn,$ende,$raumid);
   $stmt->execute();
   $kursid=$db->insert_id;

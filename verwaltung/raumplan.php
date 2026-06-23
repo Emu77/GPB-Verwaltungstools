@@ -21,6 +21,7 @@ Ferien::refsLaden($ferien);
 
 $kurse=new Liste('VerwaltungKurs',$suche->prepare("select * from gpb_kurs_view where "," order by ort,raum"));
 Kurs::refsLaden($kurse);
+Kurs::anzahlTNLaden($kurse); 
 
 $klassenById=array();
 $ferienByKlasseid=array();

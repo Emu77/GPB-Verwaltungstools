@@ -18,6 +18,8 @@ if(!isset($beruf)) {
       'id'=>0,
       'familieid'=>0,
       'bezeichnung'=>'',
+      'bezeichnungfrau'=>'',
+      'bezeichnungmann'=>'',
       'kuerzel'=>'',
       'bkz'=>'',
       'mitiskuerzel'=>''

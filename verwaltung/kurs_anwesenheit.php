@@ -49,7 +49,7 @@ if(!empty($tns->byId)) {
   }
   $result->free();
 }
-$leereAnwesenheit=(object)array('anfang'=>'','ende'=>'','kgu'=>'');
+$leereAnwesenheit=(object)array('anfang'=>'','ende'=>'','kgu'=>'','anfangTitel'=>'','endeTitel'=>'','kguTitel'=>'');
 
 require_once $ich->istleiter ? '../leitung/LeitungSeite.php' : 'VerwaltungSeite.php';
 $seite=new VerwaltungSeite('Kurs-Anwesenheit');
