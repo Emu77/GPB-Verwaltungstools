@@ -203,6 +203,7 @@ class Kurs {
 ?>
     <th>Dozenten</th>
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+    <th>Mini</th>
     <th></th>
   </tr>
 <?php
@@ -235,6 +236,7 @@ class Kurs {
     }
     $this->makeDozentenTd();
     $this->makeMoodleTd();
+    $this->makeMiniTd();
     $this->makeBearbeitenTd();
 ?>
   </tr>
@@ -317,6 +319,11 @@ class Kurs {
 <?php
     }
   }
+  function makeMiniTd($extras=null) {
+?>
+    <td <?= empty($extras) ? '' : $extras ?>></td>
+<?php
+  }
   function makeBearbeitenTd() {
 ?>
     <td class="aktionen"></td>
@@ -390,6 +397,12 @@ class Kurs {
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
 <?php
     $this->makeMoodleTd();
+?>
+  </tr>
+  <tr>
+    <th>Mini</th>
+<?php
+    $this->makeMiniTd();
 ?>
   </tr>
   <tr>

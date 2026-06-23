@@ -91,7 +91,34 @@ class VerwaltungKurs extends Kurs {
     </td>
 <?php
   }
-  function makeBearbeitenTd() {
+  function makeMiniTd($extras=null) {
+?>
+    <td <?= empty($extras) ? '' : $extras ?>>
+<?php
+    if($this->mini) {
+?>
+      <a href="../verwaltung/mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini-Kurs ansehen</a>
+      <form method="post" action="mini_freischalten.php" style="display:inline;"
+            onsubmit="return confirm('Mini-Kurs und alle Paragraphen wirklich löschen?');">
+        <input type="hidden" name="aktion" value="loeschen" />
+        <input type="hidden" name="kursid" value="<?= $this->id ?>" />
+        <button type="submit">Mini-Kurs löschen</button>
+      </form>
+<?php
+    } else {
+?>
+      <form method="post" action="mini_freischalten.php" style="display:inline;">
+        <input type="hidden" name="aktion" value="freischalten" />
+        <input type="hidden" name="kursid" value="<?= $this->id ?>" />
+        <button type="submit">Kurs für Mini freischalten</button>
+      </form>
+<?php
+    }
+?>
+    </td>
+<?php
+  }
+    function makeBearbeitenTd() {
     global $ich;
 ?>
     <td>
@@ -109,6 +136,7 @@ class VerwaltungKurs extends Kurs {
     }
 ?>
       <a href="kurs_bearbeiten.php?kursid=<?= $this->id ?>">Bearbeiten</a>
+      <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini</a>
       <a href="kurs_tn.php?kursid=<?= $this->id ?>">TN</a>
       <a href="kurs_anwesenheit.php?kursid=<?= $this->id ?>">Anwesenheit</a><br />
       <a class="<?= $this->kurzbericht_ok ? 'ok' : 'todo' ?>" href="kurs_kurzbericht.php?kursid=<?= $this->id ?>">Kurzbericht</a>
@@ -266,6 +294,12 @@ class VerwaltungKurs extends Kurs {
     $this->makeMoodleTd();
 ?>
   </tr>  
+  <tr>
+    <th>Mini</th>
+<?php
+    $this->makeMiniTd();
+?>
+  </tr>
   <tr>
     <th></th>
 <?php

@@ -245,12 +245,30 @@ class TnKurs extends Kurs {
 <?php
     }
   }
-  function makeBearbeitenTd() {
+  function makeMiniTd($extras=null) {
+?>
+    <td <?= empty($extras) ? '' : $extras ?>>
+<?php
+    if($this->mini && $this->vonMir) {
+?>
+      <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini-Kurs</a>
+<?php
+    }
+?>
+    </td>
+<?php
+  }
+    function makeBearbeitenTd() {
 ?>
     <td>
       <a href="kurs_sehen.php?kursid=<?= $this->id ?>">Sehen</a>
 <?php
     if($this->vonMir) {
+      if($this->mini) {
+?>
+      <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini</a>
+<?php
+      }
       if($this->bewertungStatus!='nochnicht') {
 ?>
       <a href="kurs_bewertung.php?kursid=<?= $this->id ?>"><?= $this->bewertungStatus=='offen' ? 'Bewerten' : 'Bewertung' ?></a>
@@ -327,6 +345,12 @@ class TnKurs extends Kurs {
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
 <?php
     $this->makeMoodleTd();
+?>
+  </tr>
+  <tr>
+    <th>Mini</th>
+<?php
+    $this->makeMiniTd();
 ?>
   </tr>
   <tr>

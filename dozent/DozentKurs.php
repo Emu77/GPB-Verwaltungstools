@@ -56,7 +56,20 @@ class DozentKurs extends Kurs {
     </td>
 <?php
   }
-  function makeBearbeitenTd() {
+  function makeMiniTd($extras=null) {
+?>
+    <td <?= empty($extras) ? '' : $extras ?>>
+<?php
+    if($this->mini) {
+?>
+      <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini</a>
+<?php
+    }
+?>
+    </td>
+<?php
+  }
+    function makeBearbeitenTd() {
     global $ich;
 ?>
     <td class="aktionen">
@@ -73,6 +86,13 @@ class DozentKurs extends Kurs {
       }
 ?>
       <a class="<?= $this->notenstatus=='todo' ? 'todo' : 'ok' ?>" href="kurs_il_noten.php?kursid=<?= $this->id ?>">IL+Noten</a>
+<?php
+      if($this->mini) {
+?>
+      <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini</a>
+<?php
+      }
+?>
 <?php
       if($this->bewertungStatus!='nochnicht') {
 ?>
