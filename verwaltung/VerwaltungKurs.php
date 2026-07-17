@@ -70,31 +70,21 @@ class VerwaltungKurs extends Kurs {
     </td>
 <?php
   }
-  function makeMoodleTd($extras=null) {
-    global $moodleisttest;
-?>
-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>
-<?php
+  function makeMoodleInhalt() {
     if($this->moodleid>0) {
       global $moodleurl;
 ?>
-    <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
+      <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
 <?php
     }
     if(isset($_SESSION['fehler']['moodleid'])) {
 ?>
-    <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
+      <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
 <?php
       unset($_SESSION['fehler']['moodleid']);
     }
-?>
-    </td>
-<?php
   }
-  function makeMiniTd($extras=null) {
-?>
-    <td <?= empty($extras) ? '' : $extras ?>>
-<?php
+  function makeMiniInhalt() {
     if($this->mini) {
 ?>
       <a href="../verwaltung/mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini-Kurs ansehen</a>
@@ -114,9 +104,6 @@ class VerwaltungKurs extends Kurs {
       </form>
 <?php
     }
-?>
-    </td>
-<?php
   }
     function makeBearbeitenTd() {
     global $ich;
@@ -289,15 +276,9 @@ class VerwaltungKurs extends Kurs {
     }
 ?>
   <tr>
-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
 <?php
-    $this->makeMoodleTd();
-?>
-  </tr>  
-  <tr>
-    <th>Mini</th>
-<?php
-    $this->makeMiniTd();
+    $this->makeMoodleMiniTd();
 ?>
   </tr>
   <tr>

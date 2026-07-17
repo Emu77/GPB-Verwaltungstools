@@ -56,18 +56,12 @@ class DozentKurs extends Kurs {
     </td>
 <?php
   }
-  function makeMiniTd($extras=null) {
-?>
-    <td <?= empty($extras) ? '' : $extras ?>>
-<?php
+  function makeMiniInhalt() {
     if($this->mini) {
 ?>
       <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini</a>
 <?php
     }
-?>
-    </td>
-<?php
   }
     function makeBearbeitenTd() {
     global $ich;

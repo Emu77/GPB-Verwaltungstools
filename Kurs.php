@@ -202,8 +202,7 @@ class Kurs {
     }
 ?>
     <th>Dozenten</th>
-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
-    <th>Mini</th>
+    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
     <th></th>
   </tr>
 <?php
@@ -235,8 +234,7 @@ class Kurs {
       $this->makeAnzahlTNTd(true);
     }
     $this->makeDozentenTd();
-    $this->makeMoodleTd();
-    $this->makeMiniTd();
+    $this->makeMoodleMiniTd();
     $this->makeBearbeitenTd();
 ?>
   </tr>
@@ -306,22 +304,30 @@ class Kurs {
     </td>
 <?php
   }
-  function makeMoodleTd($extras=null) {
-    global $moodleisttest;
+  function makeMoodleInhalt() {
     if($this->moodleid>0) {
       global $moodleurl;
 ?>
-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>><a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a></td>
+      <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
 <?php
     } else {
 ?>
-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>(in Planung)</td>
+      (in Planung)
 <?php
     }
   }
-  function makeMiniTd($extras=null) {
+  function makeMiniInhalt() {
+    // Basisklasse: kein Mini vorhanden, Unterklassen überschreiben dies bei Bedarf
+  }
+  function makeMoodleMiniTd($extras=null) {
+    global $moodleisttest;
 ?>
-    <td <?= empty($extras) ? '' : $extras ?>></td>
+    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>
+<?php
+    $this->makeMoodleInhalt();
+    $this->makeMiniInhalt();
+?>
+    </td>
 <?php
   }
   function makeBearbeitenTd() {
@@ -394,15 +400,9 @@ class Kurs {
 ?>
   </tr>
   <tr>
-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
 <?php
-    $this->makeMoodleTd();
-?>
-  </tr>
-  <tr>
-    <th>Mini</th>
-<?php
-    $this->makeMiniTd();
+    $this->makeMoodleMiniTd();
 ?>
   </tr>
   <tr>

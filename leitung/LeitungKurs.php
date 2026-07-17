@@ -102,26 +102,19 @@ class LeitungKurs extends Kurs {
     </td>
 <?php
   }
-  function makeMoodleTd($extras=null) {
-    global $moodleisttest;
-?>
-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>
-<?php
+  function makeMoodleInhalt() {
     if($this->moodleid>0) {
       global $moodleurl;
 ?>
-    <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
+      <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
 <?php
     }
     if(isset($_SESSION['fehler']['moodleid'])) {
 ?>
-    <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
+      <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
 <?php
       unset($_SESSION['fehler']['moodleid']);
     }
-?>
-    </td>
-<?php
   }
   function makeBearbeitenTd() {
 ?>
@@ -270,9 +263,9 @@ class LeitungKurs extends Kurs {
   <tr>
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
 <?php
-    $this->makeMoodleTd();
+    $this->makeMoodleMiniTd();
 ?>
-  </tr>  
+  </tr>
   <tr>
     <th></th>
 <?php

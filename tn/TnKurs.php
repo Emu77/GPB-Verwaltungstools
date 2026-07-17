@@ -102,7 +102,7 @@ class TnKurs extends Kurs {
     <th>Raum</th>
     <th>Klasse</th>
     <th>Dozent</th>
-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
     <th>Note</th>
     <th></th>
   </tr>
@@ -117,7 +117,7 @@ class TnKurs extends Kurs {
     $this->makeLocationTds();
     $this->makeKlassenTd();
     $this->makeDozentenTd();
-    $this->makeMoodleTd();
+    $this->makeMoodleMiniTd();
     $this->makeNoteTd();
     $this->makeBearbeitenTd();
 ?>
@@ -245,18 +245,12 @@ class TnKurs extends Kurs {
 <?php
     }
   }
-  function makeMiniTd($extras=null) {
-?>
-    <td <?= empty($extras) ? '' : $extras ?>>
-<?php
+  function makeMiniInhalt() {
     if($this->mini && $this->vonMir) {
 ?>
       <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini-Kurs</a>
 <?php
     }
-?>
-    </td>
-<?php
   }
     function makeBearbeitenTd() {
 ?>
@@ -342,15 +336,9 @@ class TnKurs extends Kurs {
 ?>
   </tr>
   <tr>
-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
 <?php
-    $this->makeMoodleTd();
-?>
-  </tr>
-  <tr>
-    <th>Mini</th>
-<?php
-    $this->makeMiniTd();
+    $this->makeMoodleMiniTd();
 ?>
   </tr>
   <tr>
