@@ -36,7 +36,7 @@ $kurs->makeSehen('sehen');
 <?php foreach ($paragraphen as $p): ?>
   <div class="mini-paragraph" style="border:1px solid #ccc; margin-bottom:1em; padding:0.5em;">
     <h3><?= htmlspecialchars($p->titel) ?></h3>
-    <div class="mini-inhalt"><?= $p->inhalt ?></div>
+    <div class="mini-inhalt"><?= nl2br($p->inhalt) ?></div>
   </div>
 <?php endforeach; ?>
 </div>

@@ -57,7 +57,7 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'loeschen' && isset($_POST['
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'speichern' && isset($_POST['pid'])) {
   $pid = (int)$_POST['pid'];
   $titel = $_POST['titel'] ?? '';
-  $inhalt = $_POST['inhalt'] ?? '';
+  $inhalt = isset($_POST['inhalt']) ? str_replace("\r", "\n", str_replace("\r\n", "\n", $_POST['inhalt'])) : '';
   $stmt = $db->prepare("UPDATE `gpb_mini_paragraph` SET titel=?, inhalt=? WHERE id=? AND kursid=?");
   $stmt->bind_param('ssii', $titel, $inhalt, $pid, $kurs->id);
   $stmt->execute();
@@ -178,7 +178,7 @@ if (!empty($fehler)): ?>
         </form>
       </span>
     </div>
-    <div class="mini-inhalt" style="margin-top:0.5em;"><?= $p->inhalt ?></div>
+    <div class="mini-inhalt" style="margin-top:0.5em;"><?= nl2br($p->inhalt) ?></div>
     <?php endif; ?>
 
   </div>

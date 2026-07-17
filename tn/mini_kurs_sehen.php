@@ -43,7 +43,7 @@ $kurs->makeSehen('sehen');
 <?php foreach ($paragraphen as $p): ?>
   <div class="mini-paragraph">
     <h3><?= htmlspecialchars($p->titel) ?></h3>
-    <div class="mini-inhalt"><?= $p->inhalt /* HTML erlaubt */ ?></div>
+    <div class="mini-inhalt"><?= nl2br($p->inhalt) /* HTML erlaubt */ ?></div>
   </div>
 <?php endforeach; ?>
 </div>
