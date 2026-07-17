@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-07-17
+
+### Mini (Betreuer-Feedback)
+- Moodle- und Mini-Spalte in der Kursliste sowie im Kurs-Property-Sheet zu einer gemeinsamen Zelle "Moodle / Mini" zusammengelegt (`Kurs.php` sowie die Unterklassen `dozent/DozentKurs.php`, `tn/TnKurs.php`, `verwaltung/VerwaltungKurs.php`, `leitung/LeitungKurs.php`).
+- `nl2br()` bei der Anzeige des Mini-Paragraphinhalts ergänzt (`dozent/mini_kurs_sehen.php`, `tn/mini_kurs_sehen.php`, `verwaltung/mini_kurs_sehen.php`).
+- Zeilenumbrüche beim Speichern eines Paragraphs normalisiert (`\r\n`/`\r` → `\n`), um Darstellungsprobleme durch Windows-Zeilenumbrüche zu vermeiden (`dozent/mini_kurs_sehen.php`).
+
+### Deployment
+- `db.php` aus der Versionskontrolle entfernt (enthielt Live-Zugangsdaten) und zu `.gitignore` hinzugefügt.
+- Live-`db.php` auf `kronisoft.net` mit korrekten Zugangsdaten (User `web32`, Datenbank `usr_web32_4`) aktualisiert.
+
 ## 2026-07-15
 
 ### Server-/Deployment-Fixes
