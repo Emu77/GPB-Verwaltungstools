@@ -47,7 +47,7 @@ foreach($kurse->alle as $kurs) {
       <?= empty($kurs->modultitel) ? '' : $kurs->modultitel.' ('.$kurs->moduldauer.' Wochen)' ?>
     </th>
 <?php
-  $kurs->makeMoodleTd();
+  $kurs->makeMoodleMiniTd();
 ?>
     <td><?= date('d.m.Y',$kurs->von) ?> - <?= date('d.m.Y',$kurs->bis) ?></td>
 <?php

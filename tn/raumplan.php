@@ -102,7 +102,7 @@ if(!empty($kurseByKlasseid) || !empty($ferienByKlasseid)) {
     <td><?= $k->titel ?></td>
 <?php
       $k->makeDozentenTd();
-      $k->makeMoodleTd();
+      $k->makeMoodleMiniTd();
 ?>
   </tr>
 <?php

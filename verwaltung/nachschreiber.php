@@ -115,7 +115,7 @@ function makeTr($n) {
   <tr>
     <td><a href="kurs_il_noten.php?kursid=<?= $kurs->id ?>"><?= $kurs->titel ?></a><br /><?= $kurs->ort ?></td>
 <?php
-      $kurs->makeMoodleTd();
+      $kurs->makeMoodleMiniTd();
       if(empty($kurs->nachklausur)) {
         if($kurs->moodleid<=0) {
 ?>

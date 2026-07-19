@@ -123,7 +123,7 @@ foreach($module as $modul) {
       $kurs->makeKlassenTd();
       $kurs->makeAnzahlTNTd(true);
       $kurs->makeDozentenTd();
-      $kurs->makeMoodleTd();
+      $kurs->makeMoodleMiniTd();
       $kurs->makeBearbeitenTd();
 ?>
   </tr>
