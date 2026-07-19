@@ -186,12 +186,17 @@ if (!empty($fehler)): ?>
         <input type="text" name="titel" value="<?= htmlspecialchars($p->titel) ?>" style="width:100%;" /></label>
       </div>
       <div style="margin-top:0.5em;">
-        <label><strong>Inhalt (HTML erlaubt):</strong><br />
-        <textarea name="inhalt" rows="10" style="width:100%;"><?= htmlspecialchars($p->inhalt) ?></textarea></label>
+        <label><strong>Inhalt (HTML erlaubt):</strong></label>
+        <div class="mini-vorschau" style="display:none; border:2px dashed #888; padding:0.5em; margin-bottom:0.3em; background:#fffbe6;">
+          <em>Vorschau (noch nicht gespeichert):</em>
+          <div class="mini-vorschau-inhalt" style="margin-top:0.3em;"></div>
+        </div>
+        <textarea name="inhalt" rows="10" style="width:100%;"><?= htmlspecialchars($p->inhalt) ?></textarea>
       </div>
       <div style="margin-top:0.5em;">
         <button type="submit">Speichern</button>
         <button type="submit" name="weiter" value="1">Speichern und weiter bearbeiten</button>
+        <button type="button" class="mini-vorschau-btn">Vorschau</button>
         <a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">Abbrechen</a>
       </div>
     </form>
@@ -256,11 +261,16 @@ if (!empty($fehler)): ?>
         <input type="text" name="titel" style="width:100%;" /></label>
       </div>
       <div style="margin-top:0.5em;">
-        <label><strong>Inhalt (HTML erlaubt):</strong><br />
-        <textarea name="inhalt" rows="6" style="width:100%;"></textarea></label>
+        <label><strong>Inhalt (HTML erlaubt):</strong></label>
+        <div class="mini-vorschau" style="display:none; border:2px dashed #888; padding:0.5em; margin-bottom:0.3em; background:#fffbe6;">
+          <em>Vorschau (noch nicht gespeichert):</em>
+          <div class="mini-vorschau-inhalt" style="margin-top:0.3em;"></div>
+        </div>
+        <textarea name="inhalt" rows="6" style="width:100%;"></textarea>
       </div>
       <div style="margin-top:0.5em;">
         <button type="submit">Speichern</button>
+        <button type="button" class="mini-vorschau-btn">Vorschau</button>
         <button type="button" class="mini-neu-abbrechen">Abbrechen</button>
       </div>
     </form>
@@ -305,6 +315,28 @@ if (!empty($fehler)): ?>
     if (formular) formular.remove();
     var slotForm = slot.querySelector('.mini-neu-slot-form');
     if (slotForm) slotForm.style.display = '';
+  });
+
+  // Vorschau-Button: kopiert den Textarea-Inhalt in ein deutlich als Vorschau
+  // gekennzeichnetes div darüber (gestrichelter Rahmen), \n wird zu <br>.
+  // Erneutes Klicken blendet die Vorschau wieder aus.
+  container.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('mini-vorschau-btn')) return;
+    var form = e.target.closest('form');
+    if (!form) return;
+    var textarea = form.querySelector('textarea[name="inhalt"]');
+    var vorschauDiv = form.querySelector('.mini-vorschau');
+    var vorschauInhalt = form.querySelector('.mini-vorschau-inhalt');
+    if (!textarea || !vorschauDiv || !vorschauInhalt) return;
+
+    if (vorschauDiv.style.display === 'none' || !vorschauDiv.style.display) {
+      vorschauInhalt.innerHTML = textarea.value.replace(/\n/g, '<br>');
+      vorschauDiv.style.display = 'block';
+      e.target.textContent = 'Vorschau ausblenden';
+    } else {
+      vorschauDiv.style.display = 'none';
+      e.target.textContent = 'Vorschau';
+    }
   });
 })();
 </script>
