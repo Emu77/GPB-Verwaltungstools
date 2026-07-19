@@ -151,21 +151,24 @@ class LeitungKurs extends Kurs {
 <?php
       unset($_SESSION['fehler']['done']);
     }
+    $tableId=$this->neuePropertySheetId();
+    $this->makePropertySheetToggleFunktionEinmalig();
 ?>
-<table border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
-  <tr>
+<?php $this->makePropertySheetToggleButton($tableId); ?>
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
+  <tr id="<?= $tableId ?>_beginn">
     <th>Beginn</th>
     <td><?= date('d.m.Y',$this->von) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ende">
     <th>Ende</th>
     <td><?= date('d.m.Y',$this->bis) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_einzeltag" class="kurs-ps-mehr">
     <th>Einzeltag einer Reihe</th>
     <td><?= $this->einzeltage ? 'Ja' : 'Nein' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_pv" class="kurs-ps-mehr">
     <th>Prüfungsvorbereitung</th>
     <td>
 <?php
@@ -179,34 +182,34 @@ class LeitungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_klassen">
     <th>Klassen</th>
 <?php
     $this->makeKlassenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_anzahltn" class="kurs-ps-mehr">
     <th>Anzahl TN</th>
     <td>
       Angemeldet:<?= $this->anzahlAnmeldungen ?><br />
       Eingestiegen: <?= $this->anzahlTN ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_dozenten">
     <th>Dozenten</th>
 <?php
     $this->makeDozentenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_modul" class="kurs-ps-mehr">
     <th>Modul</th>
     <td><?= empty($this->modulid) ? '(keines)' : $this->modultitel.' ('.$this->moduldauer.' Wochen)' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_zeugnisrelevant" class="kurs-ps-mehr">
     <th>Zeugnis-relevant</th>
     <td><?= $this->zeugnisrelevant ? 'Ja' : 'Nein' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_noten" class="kurs-ps-mehr">
     <th>Noten</th>
     <td>
 <?php
@@ -216,19 +219,19 @@ class LeitungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_bewertung" class="kurs-ps-mehr">
     <th>Bewertung</th>
     <td><input type="checkbox" value="J" <?= $this->bewertungoffen ? 'checked' : '' ?> onchange="location.href='kurs_bewertungoffen_speichern.php?redirect='+encodeURIComponent(location.href)+'&kursid=<?= $this->id ?>&bewertungoffen='+(this.checked ? 'J' : 'N');" /> offen (ab Kursende)</td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ort" class="kurs-ps-mehr">
     <th>Ort</th>
     <td><?= $this->ort ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_raum" class="kurs-ps-mehr">
     <th>Raum</th>
     <td><?= $this->raum ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_kw">
     <th>KW</th>
     <td>
 <?php
@@ -240,39 +243,42 @@ class LeitungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_titel">
     <th>Titel</th>
 <?php
     $this->makeTitelTd();
 ?>
   </tr>
-  <tr <?= empty($this->planungfarbe) ? '' : 'style="background-color:'.htmlentities($this->planungfarbe,ENT_COMPAT).';"' ?>>
+  <tr id="<?= $tableId ?>_planungsnotiz" class="kurs-ps-mehr" <?= empty($this->planungfarbe) ? '' : 'style="background-color:'.htmlentities($this->planungfarbe,ENT_COMPAT).';"' ?>>
     <th>Planungsnotiz</th>
     <td><?= $this->planungnotiz ?></td>
   </tr>
 <?php
     if($this->moodleid<=0) {
 ?>
-  <tr>
+  <tr id="<?= $tableId ?>_planungsstatus" class="kurs-ps-mehr">
     <th>Planungsstatus</th>
     <td><?= $this->sichtbar ? 'Für Dozenten und TN sichtbar' : 'In Planung' ?></td>
   </tr>
 <?php
     }
 ?>
-  <tr>
+  <tr id="<?= $tableId ?>_moodlemini" class="kurs-ps-mehr">
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
 <?php
     $this->makeMoodleMiniTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_aktionen">
     <th></th>
 <?php
     $this->makeBearbeitenTd();
 ?>
   </tr>
 </table>
+<?php
+    $this->makePropertySheetInitialEinklappen($tableId);
+?>
 <br />
 <?php
   }

@@ -280,9 +280,12 @@ class TnKurs extends Kurs {
   }
   function makeSehen($classname='') {
     global $moodleisttest;
+    $tableId=$this->neuePropertySheetId();
+    $this->makePropertySheetToggleFunktionEinmalig();
 ?>
-<table border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
-  <tr>
+<?php $this->makePropertySheetToggleButton($tableId); ?>
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
+  <tr id="<?= $tableId ?>_kw">
     <th>KW</th>
     <td>
 <?php
@@ -301,54 +304,54 @@ class TnKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_beginn">
     <th>Beginn</th>
     <td><?= date('d.m.Y',$this->von) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ende">
     <th>Ende</th>
     <td><?= date('d.m.Y',$this->bis) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_titel">
     <th>Titel</th>
 <?php
     $this->makeTitelTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ort" class="kurs-ps-mehr">
     <th>Ort</th>
     <td><?= $this->ort ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_raum" class="kurs-ps-mehr">
     <th>Raum</th>
     <td class="raum"><?= $this->raum ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_klasse">
     <th>Klasse</th>
 <?php
     $this->makeKlassenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_dozent">
     <th>Dozent</th>
 <?php
     $this->makeDozentenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_moodlemini" class="kurs-ps-mehr">
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
 <?php
     $this->makeMoodleMiniTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_zeugnismodul" class="kurs-ps-mehr">
     <th>Zeugnis-Modul</th>
     <td><?= empty($this->modulid) ? '(keines)' : $this->modultitel.' ('.$this->moduldauer.' Wochen)' ?></td>
   </tr>
 <?php
     if($this->vonMir) {
 ?>
-  <tr>
+  <tr id="<?= $tableId ?>_note" class="kurs-ps-mehr">
     <th>Note</th>
 <?php
       $this->makeNoteTd();
@@ -357,13 +360,16 @@ class TnKurs extends Kurs {
 <?php
     }
 ?>
-  <tr>
+  <tr id="<?= $tableId ?>_aktionen">
     <th></th>
 <?php
     $this->makeBearbeitenTd();
 ?>
   </tr>
 </table>
+<?php
+    $this->makePropertySheetInitialEinklappen($tableId);
+?>
 <br />
 <?php
   }

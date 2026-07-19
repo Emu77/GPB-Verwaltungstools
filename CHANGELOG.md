@@ -8,7 +8,15 @@
 - Mit JavaScript öffnet ein Klick auf "+ neuer Paragraph" direkt an der Klickstelle ein Titel/Inhalt-Formular, ohne Page-Reload; beim Speichern wird der Paragraph in einem Schritt mit Inhalt an der richtigen Position angelegt.
 - Ohne JavaScript (Fallback): Klick legt sofort einen leeren Paragraph an der gewünschten Position an und springt automatisch ins Bearbeiten-Formular.
 - Neuer Button "Speichern und weiter bearbeiten" beim Bearbeiten bestehender Paragraphen.
-- Alle Aktionen (hinzufügen/speichern/löschen/hoch/runter) schließen jetzt konsistent mit einem Redirect ab (Post/Redirect/Get-Pattern), Erfolgsmeldungen werden über `?erfolg=...` transportiert.## 2026-07-17
+- Alle Aktionen (hinzufügen/speichern/löschen/hoch/runter) schließen jetzt konsistent mit einem Redirect ab (Post/Redirect/Get-Pattern), Erfolgsmeldungen werden über `?erfolg=...` transportiert.
+
+### Kurs-PropertySheet
+- Auf-/Zuklapp-Button für die PropertySheet der Kursseite ergänzt (`Kurs.php`, `tn/TnKurs.php`, `verwaltung/VerwaltungKurs.php`, `leitung/LeitungKurs.php`).
+- Jede Zeile der PropertySheet bekommt in `makeSehen()` eine eigene ID; Zusatzzeilen zusätzlich die Klasse `kurs-ps-mehr`.
+- Standardmäßig eingeklappt: nur Titel, Zeitraum (KW/Beginn/Ende), Klassen, Dozenten und die Aktionsleiste sind sichtbar. Der Rest (Ort, Raum, Anzahl TN, Moodle/Mini, Zeugnis-Modul, und bei Verwaltung/Leitung zusätzlich PV, IHK-Projektantrag, Planungsnotiz, Noten, Bewertung u. a.) lässt sich per Button ein-/ausblenden.
+- Ohne JavaScript bleiben alle Zeilen sichtbar (kein dauerhaft verstecktes Formular).
+
+## 2026-07-17## 2026-07-17
 
 ### Mini (Betreuer-Feedback)
 - Moodle- und Mini-Spalte in der Kursliste sowie im Kurs-Property-Sheet zu einer gemeinsamen Zelle "Moodle / Mini" zusammengelegt (`Kurs.php` sowie die Unterklassen `dozent/DozentKurs.php`, `tn/TnKurs.php`, `verwaltung/VerwaltungKurs.php`, `leitung/LeitungKurs.php`).

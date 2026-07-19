@@ -335,12 +335,60 @@ class Kurs {
     <td class="aktionen"></td>
 <?php
   }
+
+  // Gemeinsame Infrastruktur für den Auf-/Zuklapp-Button der PropertySheet.
+  // Wird von allen Unterklassen geerbt, die makeSehen() überschreiben (TnKurs,
+  // VerwaltungKurs, LeitungKurs) - Zeilen bekommen dort jeweils eine eigene ID
+  // sowie ggf. die Klasse "kurs-ps-mehr", damit der Button gezielt weiß,
+  // welche Zeilen er ein-/ausblenden soll.
+  // Ohne JavaScript bleiben alle Zeilen sichtbar (kein dauerhaft verstecktes
+  // Formular); mit JavaScript wird beim Laden direkt eingeklappt.
+  static $naechstePropertySheetId = 1;
+  function neuePropertySheetId() {
+    return 'kurs_propertysheet_' . (self::$naechstePropertySheetId++);
+  }
+  function makePropertySheetToggleFunktionEinmalig() {
+    static $ausgegeben = false;
+    if ($ausgegeben) return; // Toggle-Funktion soll pro Seite nur einmal definiert werden
+    $ausgegeben = true;
+?>
+<script>
+function kursPropertysheetToggle(tableId, btn) {
+  var eingeklappt = btn.getAttribute('data-eingeklappt') !== '0';
+  document.querySelectorAll('#' + tableId + ' tr.kurs-ps-mehr').forEach(function (row) {
+    row.style.display = eingeklappt ? '' : 'none';
+  });
+  btn.setAttribute('data-eingeklappt', eingeklappt ? '0' : '1');
+  btn.textContent = eingeklappt ? '▲ weniger anzeigen' : '▼ mehr anzeigen';
+}
+</script>
+<?php
+  }
+  function makePropertySheetToggleButton($tableId) {
+?>
+  <button type="button" class="kurs-ps-toggle-btn" data-eingeklappt="1" onclick="kursPropertysheetToggle('<?= $tableId ?>', this)">▼ mehr anzeigen</button>
+<?php
+  }
+  // Direkt nach der Tabelle aufrufen: klappt die Zusatzzeilen beim Laden per
+  // JavaScript ein. Ohne JavaScript bleiben alle Zeilen einfach sichtbar.
+  function makePropertySheetInitialEinklappen($tableId) {
+?>
+<script>
+document.querySelectorAll('#<?= $tableId ?> tr.kurs-ps-mehr').forEach(function (row) {
+  row.style.display = 'none';
+});
+</script>
+<?php
+  }
   
   function makeSehen($classname='') {
     global $moodleisttest;
+    $tableId=$this->neuePropertySheetId();
+    $this->makePropertySheetToggleFunktionEinmalig();
 ?>
-<table border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
-  <tr>
+<?php $this->makePropertySheetToggleButton($tableId); ?>
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
+  <tr id="<?= $tableId ?>_kw">
     <th>KW</th>
     <td>
 <?php
@@ -359,63 +407,66 @@ class Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_beginn">
     <th>Beginn</th>
     <td><?= date('d.m.Y',$this->von) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ende">
     <th>Ende</th>
     <td><?= date('d.m.Y',$this->bis) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_titel">
     <th>Titel</th>
 <?php
     $this->makeTitelTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ort" class="kurs-ps-mehr">
     <th>Ort</th>
     <td><?= $this->ort ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_raum" class="kurs-ps-mehr">
     <th>Raum</th>
     <td><?= $this->raum ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_klassen">
     <th>Klassen</th>
 <?php
     $this->makeKlassenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_anzahltn" class="kurs-ps-mehr">
     <th>Anzahl TN</th>
 <?php
     $this->makeAnzahlTNTd(false);
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_dozenten">
     <th>Dozenten</th>
 <?php
     $this->makeDozentenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_moodlemini" class="kurs-ps-mehr">
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
 <?php
     $this->makeMoodleMiniTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_zeugnismodul" class="kurs-ps-mehr">
     <th>Zeugnis-Modul</th>
     <td><?= empty($this->modulid) ? '(keines)' : $this->modultitel.' ('.$this->moduldauer.' Wochen)' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_aktionen">
     <th></th>
 <?php
     $this->makeBearbeitenTd();
 ?>
   </tr>
 </table>
+<?php
+    $this->makePropertySheetInitialEinklappen($tableId);
+?>
 <br />
 <?php
   }

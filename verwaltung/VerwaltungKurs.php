@@ -147,52 +147,55 @@ class VerwaltungKurs extends Kurs {
 <?php
       unset($_SESSION['fehler']['done']);
     }
+    $tableId=$this->neuePropertySheetId();
+    $this->makePropertySheetToggleFunktionEinmalig();
 ?>
-<table border="1" cellspacing="0" style="border-collapse:collapse;margin-bottom:1em;" class="<?= $classname ?>">
-  <tr>
+<?php $this->makePropertySheetToggleButton($tableId); ?>
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse;margin-bottom:1em;" class="<?= $classname ?>">
+  <tr id="<?= $tableId ?>_beginn">
     <th>Beginn</th>
     <td><?= date('d.m.Y',$this->von) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ende">
     <th>Ende</th>
     <td><?= date('d.m.Y',$this->bis) ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_einzeltag" class="kurs-ps-mehr">
     <th>Einzeltag einer Reihe</th>
     <td><?= $this->einzeltage ? 'Ja' : 'Nein' ?></td>
   </tr>  
-  <tr>
+  <tr id="<?= $tableId ?>_klassen">
     <th>Klassen</th>
 <?php
     $this->makeKlassenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_anzahltn" class="kurs-ps-mehr">
     <th>Anzahl TN</th>
     <td>
       Angemeldet:<?= $this->anzahlAnmeldungen ?><br />
       Eingestiegen: <?= $this->anzahlTN ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_dozenten">
     <th>Dozenten</th>
 <?php
     $this->makeDozentenTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_modul" class="kurs-ps-mehr">
     <th>Modul</th>
     <td><?= empty($this->modulid) ? '(keines)' : $this->modultitel.' ('.$this->moduldauer.' Wochen)' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_zeugnisrelevant" class="kurs-ps-mehr">
     <th>Zeugnis-relevant</th>
     <td><?= $this->zeugnisrelevant ? 'Ja' : 'Nein' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_gewichtung" class="kurs-ps-mehr">
     <th>Gewichtung im Zeugnis</th>
     <td><?= $this->zeugnisgewichtung<0 ? 'automatisch (Kursdauer in Wochen)' : $this->zeugnisgewichtung.' Wochen' ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_noten" class="kurs-ps-mehr">
     <th><a class="<?= $this->notenstatus=='todo' ? 'todo' : 'ok' ?>" href="kurs_noten.php?kursid=<?= $this->id ?>">Noten</a></th>
     <td>
 <?php
@@ -202,15 +205,15 @@ class VerwaltungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ort" class="kurs-ps-mehr">
     <th>Ort</th>
     <td><?= $this->ort ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_raum" class="kurs-ps-mehr">
     <th>Raum</th>
     <td><?= $this->raum ?></td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_kw">
     <th>KW</th>
     <td>
 <?php
@@ -229,13 +232,13 @@ class VerwaltungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_titel">
     <th>Titel</th>
 <?php
     $this->makeTitelTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_pv" class="kurs-ps-mehr">
     <th>Prüfungsvorbereitung</th>
     <td>
 <?php
@@ -249,7 +252,7 @@ class VerwaltungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_ihkprojektantrag" class="kurs-ps-mehr">
     <th>IHK-Projektantrag</th>
     <td>
 <?php
@@ -261,33 +264,36 @@ class VerwaltungKurs extends Kurs {
 ?>
     </td>
   </tr>
-  <tr <?= empty($this->planungfarbe) ? '' : 'style="background-color:'.htmlentities($this->planungfarbe,ENT_COMPAT).';"' ?>>
+  <tr id="<?= $tableId ?>_planungsnotiz" class="kurs-ps-mehr" <?= empty($this->planungfarbe) ? '' : 'style="background-color:'.htmlentities($this->planungfarbe,ENT_COMPAT).';"' ?>>
     <th>Planungsnotiz</th>
     <td><?= $this->planungnotiz ?></td>
   </tr>
 <?php
     if($this->moodleid<=0) {
 ?>
-  <tr>
+  <tr id="<?= $tableId ?>_planungsstatus" class="kurs-ps-mehr">
     <th>Planungsstatus</th>
     <td><?= $this->sichtbar ? 'Für Dozenten und TN sichtbar' : 'In Planung' ?></td>
   </tr>
 <?php
     }
 ?>
-  <tr>
+  <tr id="<?= $tableId ?>_moodlemini" class="kurs-ps-mehr">
     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
 <?php
     $this->makeMoodleMiniTd();
 ?>
   </tr>
-  <tr>
+  <tr id="<?= $tableId ?>_aktionen">
     <th></th>
 <?php
     $this->makeBearbeitenTd();
 ?>
   </tr>
 </table>
+<?php
+    $this->makePropertySheetInitialEinklappen($tableId);
+?>
 <br />
 <?php
   }
