@@ -19,8 +19,82 @@ if (!in_array($ich->id, $kurs->dozentenids)) {
 $fehler = '';
 $erfolg = '';
 
+require_once '../MiniAnhang.php';
+
 function gpbMiniNormalisieren($s) {
   return str_replace("\r", "\n", str_replace("\r\n", "\n", $s));
+}
+
+// Zufälliger, nicht erratbarer Dateiname für die Platte (Original-Name
+// bleibt nur in der DB gespeichert und wird beim Download wieder verwendet)
+function gpbMiniAnhangDateinameErzeugen($originalName) {
+  $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+  $extSauber = preg_replace('/[^A-Za-z0-9]/', '', $ext);
+  return bin2hex(random_bytes(16)) . ($extSauber !== '' ? '.' . $extSauber : '');
+}
+
+// Anhang hochladen
+if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_hochladen' && isset($_POST['pid'])) {
+  $pid = (int)$_POST['pid'];
+  $ergebnis = 'anhang_fehler'; // Standard: Fehler, wird unten bei Erfolg überschrieben
+
+  // Prüfen, dass der Paragraph wirklich zu diesem Kurs gehört
+  $res = $db->query("SELECT id FROM `gpb_mini_paragraph` WHERE id=" . $pid . " AND kursid=" . $kurs->id . " LIMIT 1");
+  $paragraphOk = $res->fetch_object();
+  $res->free();
+
+  if (!$paragraphOk) {
+    error_log('Mini-Anhang-Upload: Paragraph ' . $pid . ' gehört nicht zu Kurs ' . $kurs->id);
+  } elseif (!isset($_FILES['datei']) || $_FILES['datei']['error'] !== UPLOAD_ERR_OK) {
+    $fehlerCode = isset($_FILES['datei']) ? $_FILES['datei']['error'] : 'kein $_FILES[datei]';
+    error_log('Mini-Anhang-Upload: Datei-Upload-Fehler, error-Code=' . $fehlerCode . ' (siehe PHP-Doku UPLOAD_ERR_*)');
+  } else {
+    $originalName = basename($_FILES['datei']['name']);
+    $groesse = (int)$_FILES['datei']['size'];
+    $gespeichert = gpbMiniAnhangDateinameErzeugen($originalName);
+
+    $ordner = dirname(__DIR__) . '/mini_uploads/dozent_' . $ich->id;
+    if (!is_dir($ordner) && !mkdir($ordner, 0755, true) && !is_dir($ordner)) {
+      error_log('Mini-Anhang-Upload: Konnte Ordner nicht anlegen: ' . $ordner);
+    } elseif (!move_uploaded_file($_FILES['datei']['tmp_name'], $ordner . '/' . $gespeichert)) {
+      error_log('Mini-Anhang-Upload: move_uploaded_file fehlgeschlagen nach ' . $ordner . '/' . $gespeichert);
+    } else {
+      $stmt = $db->prepare("INSERT INTO `gpb_mini_anhang` (paragraphid, dozentid, dateiname, gespeicherter_dateiname, groesse, hochgeladen_am) VALUES (?, ?, ?, ?, ?, NOW())");
+      $stmt->bind_param('iissi', $pid, $ich->id, $originalName, $gespeichert, $groesse);
+      $stmt->execute();
+      $stmt->close();
+      $ergebnis = 'anhang_hochgeladen';
+    }
+  }
+
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid . '&erfolg=' . $ergebnis);
+  exit;
+}
+
+// Anhang löschen
+if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_loeschen' && isset($_POST['anhangid'])) {
+  $anhangid = (int)$_POST['anhangid'];
+  $pid = isset($_POST['pid']) ? (int)$_POST['pid'] : 0;
+  // Nur löschen, wenn der Anhang zu einem Paragraph dieses Kurses gehört
+  $res = $db->query(
+    "SELECT a.id, a.dozentid, a.gespeicherter_dateiname FROM `gpb_mini_anhang` a " .
+    "JOIN `gpb_mini_paragraph` p ON p.id=a.paragraphid " .
+    "WHERE a.id=" . $anhangid . " AND p.kursid=" . $kurs->id . " LIMIT 1"
+  );
+  $anhang = $res->fetch_object();
+  $res->free();
+  if ($anhang) {
+    $pfad = miniAnhangPfad($anhang->dozentid, $anhang->gespeicherter_dateiname);
+    if (is_file($pfad)) {
+      unlink($pfad);
+    }
+    $stmt = $db->prepare("DELETE FROM `gpb_mini_anhang` WHERE id=?");
+    $stmt->bind_param('i', $anhangid);
+    $stmt->execute();
+    $stmt->close();
+  }
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid . '&erfolg=anhang_geloescht');
+  exit;
 }
 
 // Paragraph hinzufügen (optional mit Titel/Inhalt und an einer bestimmten Position)
@@ -136,9 +210,13 @@ $erfolgsTexte = array(
   'gespeichert'  => 'Paragraph gespeichert.',
   'geloescht'    => 'Paragraph gelöscht.',
   'verschoben'   => 'Reihenfolge geändert.',
+  'anhang_hochgeladen' => 'Anhang hochgeladen.',
+  'anhang_geloescht'   => 'Anhang gelöscht.',
 );
 if (isset($_GET['erfolg']) && isset($erfolgsTexte[$_GET['erfolg']])) {
   $erfolg = $erfolgsTexte[$_GET['erfolg']];
+} elseif (isset($_GET['erfolg']) && $_GET['erfolg'] === 'anhang_fehler') {
+  $fehler = 'Anhang konnte nicht hochgeladen werden (siehe php_error_log für Details).';
 }
 
 require_once 'DozentSeite.php';
@@ -209,6 +287,37 @@ if (!empty($fehler)): ?>
       </div>
     </form>
 
+    <!-- Anhänge (eigenes Formular mit enctype=multipart, unabhängig vom Bearbeiten-Formular) -->
+    <div class="mini-anhaenge" style="margin-top:1em; padding-top:0.5em; border-top:1px solid #ddd;">
+      <strong>Anhänge:</strong>
+      <?php $anhaenge = miniAnhangListeLaden($p->id); ?>
+      <?php if (empty($anhaenge)): ?>
+      <div><em>Keine Anhänge.</em></div>
+      <?php else: ?>
+      <ul style="margin:0.3em 0;">
+        <?php foreach ($anhaenge as $a): ?>
+        <li>
+          <a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a>
+          (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)
+          <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" style="display:inline;"
+                onsubmit="return confirm('Anhang wirklich löschen?');">
+            <input type="hidden" name="aktion" value="anhang_loeschen" />
+            <input type="hidden" name="anhangid" value="<?= $a->id ?>" />
+            <input type="hidden" name="pid" value="<?= $p->id ?>" />
+            <button type="submit" title="Anhang löschen">🗑️</button>
+          </form>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+      <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" enctype="multipart/form-data">
+        <input type="hidden" name="aktion" value="anhang_hochladen" />
+        <input type="hidden" name="pid" value="<?= $p->id ?>" />
+        <input type="file" name="datei" required />
+        <button type="submit">Anhang hochladen</button>
+      </form>
+    </div>
+
     <?php else: ?>
     <!-- Ansichtsmodus -->
     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -241,6 +350,17 @@ if (!empty($fehler)): ?>
       </span>
     </div>
     <div class="mini-inhalt" style="margin-top:0.5em;"><?= nl2br($p->inhalt) ?></div>
+    <?php $anhaengeAnsicht = miniAnhangListeLaden($p->id); ?>
+    <?php if (!empty($anhaengeAnsicht)): ?>
+    <div class="mini-anhaenge" style="margin-top:0.5em;">
+      <strong>Anhänge:</strong>
+      <ul style="margin:0.3em 0;">
+        <?php foreach ($anhaengeAnsicht as $a): ?>
+        <li><a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a> (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)</li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
     <?php endif; ?>
 
   </div>

@@ -3,6 +3,7 @@ require_once '../Suche.php';
 @session_start();
 require_once 'check_login.php';
 require_once 'VerwaltungKurs.php';
+require_once '../MiniAnhang.php';
 
 $kurs = Kurs::einenLaden(isset($_GET['kursid']) ? (int)$_GET['kursid'] : 0, 'VerwaltungKurs');
 if (empty($kurs)) {
@@ -37,6 +38,17 @@ $kurs->makeSehen('sehen');
   <div class="mini-paragraph" style="border:1px solid #ccc; margin-bottom:1em; padding:0.5em;">
     <h3><?= htmlspecialchars($p->titel) ?></h3>
     <div class="mini-inhalt"><?= nl2br($p->inhalt) ?></div>
+    <?php $anhaenge = miniAnhangListeLaden($p->id); ?>
+    <?php if (!empty($anhaenge)): ?>
+    <div class="mini-anhaenge" style="margin-top:0.5em;">
+      <strong>Anhänge:</strong>
+      <ul style="margin:0.3em 0;">
+        <?php foreach ($anhaenge as $a): ?>
+        <li><a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a> (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)</li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
   </div>
 <?php endforeach; ?>
 </div>

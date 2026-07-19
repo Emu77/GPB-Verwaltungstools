@@ -2,6 +2,7 @@
 require_once 'check_login.php';
 require_once '../Liste.php';
 require_once 'TnKurs.php';
+require_once '../MiniAnhang.php';
 
 $kurs = Kurs::einenLaden(isset($_GET['kursid']) ? (int)$_GET['kursid'] : 0, 'TnKurs');
 if (empty($kurs)) {
@@ -44,6 +45,17 @@ $kurs->makeSehen('sehen');
   <div class="mini-paragraph">
     <h3><?= htmlspecialchars($p->titel) ?></h3>
     <div class="mini-inhalt"><?= nl2br($p->inhalt) /* HTML erlaubt */ ?></div>
+    <?php $anhaenge = miniAnhangListeLaden($p->id); ?>
+    <?php if (!empty($anhaenge)): ?>
+    <div class="mini-anhaenge" style="margin-top:0.5em;">
+      <strong>Anhänge:</strong>
+      <ul style="margin:0.3em 0;">
+        <?php foreach ($anhaenge as $a): ?>
+        <li><a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a> (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)</li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
   </div>
 <?php endforeach; ?>
 </div>

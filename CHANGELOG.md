@@ -18,6 +18,16 @@
 - Vorschau-Button im Paragraph-Formular (Bearbeiten + neu anlegen): kopiert den Textarea-Inhalt per JavaScript in ein deutlich gekennzeichnetes Vorschau-Div darüber (gestrichelter Rahmen, Hinweistext), `\n` wird zu `<br>` ersetzt. Erneuter Klick blendet die Vorschau wieder aus.
 - Formatierungs-Buttons im Paragraph-Formular (Bearbeiten + neu anlegen): Fett, Kursiv, Unterstrichen, Rot, Grün, Liste. Umschließen die Markierung mit dem passenden HTML-Tag; erneuter Klick auf eine bereits umschlossene Markierung entfernt die Tags wieder (Toggle). Funktioniert zuverlässig bei korrekter Markierung.
 
+### Mini: Anhänge (Upload/Download)
+- Neue Tabelle `gpb_mini_anhang` (Migration `migrations/2026-07-19_gpb_mini_anhang.sql`): Original-Dateiname, zufälliger Speicherdateiname, Größe, Zeitstempel.
+- Dateien werden pro Dozent in `mini_uploads/dozent_<id>/` gespeichert; der Ordner ist per `.htaccess` komplett gesperrt (`Require all denied` / `Deny from all`).
+- Downloads laufen ausschließlich über `mini_anhang_download.php` im Projektroot, das je nach eingeloggter Rolle (Dozent/TN/Verwaltung) prüft, ob Zugriff auf den zugehörigen Kurs besteht, bevor die Datei ausgeliefert wird.
+- Neue gemeinsame Hilfsdatei `MiniAnhang.php` (Liste laden, Dateigröße anzeigen, Speicherpfad ermitteln), genutzt von `dozent/`, `tn/` und `verwaltung/mini_kurs_sehen.php`.
+- Dozent: Anhänge hochladen/löschen im Bearbeiten-Formular jedes Paragraphen; Downloadliste zusätzlich im Ansichtsmodus.
+- TN und Verwaltung: nur Downloadliste (read-only), keine Upload-/Löschmöglichkeit.
+- `.gitignore` ergänzt: hochgeladene Anhänge (`mini_uploads/dozent_*`) werden nicht versioniert.
+- Fehlerbehandlung beim Upload verbessert: fehlgeschlagene Uploads (z. B. Ordner nicht beschreibbar) werden jetzt als Fehlermeldung angezeigt statt fälschlich als Erfolg, Details landen im `php_error_log`.
+
 ## 2026-07-17
 
 ### Mini (Betreuer-Feedback)
