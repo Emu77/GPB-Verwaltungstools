@@ -19,20 +19,43 @@ if (!in_array($ich->id, $kurs->dozentenids)) {
 $fehler = '';
 $erfolg = '';
 
-// Paragraph hinzufügen
+function gpbMiniNormalisieren($s) {
+  return str_replace("\r", "\n", str_replace("\r\n", "\n", $s));
+}
+
+// Paragraph hinzufügen (optional mit Titel/Inhalt und an einer bestimmten Position)
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'hinzufuegen') {
-  $naechsteNummer = 1;
-  $res = $db->query("SELECT MAX(nummer) as max FROM `gpb_mini_paragraph` WHERE kursid=" . $kurs->id);
-  $row = $res->fetch_object();
-  $res->free();
-  if ($row && $row->max !== null) {
-    $naechsteNummer = (int)$row->max + 1;
+  $titel = $_POST['titel'] ?? '';
+  $inhalt = isset($_POST['inhalt']) ? gpbMiniNormalisieren($_POST['inhalt']) : '';
+
+  // Bestehende Paragraphen laden, um Position zu bestimmen und ggf. umzunummerieren
+  $res = $db->query("SELECT id, nummer FROM `gpb_mini_paragraph` WHERE kursid=" . $kurs->id . " ORDER BY nummer ASC");
+  $bestehende = array();
+  while ($row = $res->fetch_object()) {
+    $bestehende[] = $row;
   }
-  $stmt = $db->prepare("INSERT INTO `gpb_mini_paragraph` (kursid, nummer, titel, inhalt) VALUES (?, ?, '', '')");
-  $stmt->bind_param('ii', $kurs->id, $naechsteNummer);
+  $res->free();
+  $anzahl = count($bestehende);
+
+  $position = isset($_POST['position']) && $_POST['position'] !== '' ? (int)$_POST['position'] : $anzahl;
+  if ($position < 0) $position = 0;
+  if ($position > $anzahl) $position = $anzahl;
+
+  // Alle Paragraphen ab der Einfügeposition um eins nach hinten schieben
+  for ($i = $anzahl - 1; $i >= $position; $i--) {
+    $db->query("UPDATE `gpb_mini_paragraph` SET nummer=" . ($bestehende[$i]->nummer + 1) . " WHERE id=" . $bestehende[$i]->id);
+  }
+
+  $neueNummer = $position + 1;
+  $stmt = $db->prepare("INSERT INTO `gpb_mini_paragraph` (kursid, nummer, titel, inhalt) VALUES (?, ?, ?, ?)");
+  $stmt->bind_param('iiss', $kurs->id, $neueNummer, $titel, $inhalt);
   $stmt->execute();
+  $neueId = $stmt->insert_id;
   $stmt->close();
-  $erfolg = 'Neuer Paragraph hinzugefügt.';
+
+  // Direkt ins Bearbeiten-Formular des neuen Paragraphen springen
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $neueId . '&erfolg=hinzugefuegt');
+  exit;
 }
 
 // Paragraph löschen
@@ -50,19 +73,27 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'loeschen' && isset($_POST['
     $num++;
   }
   $res->free();
-  $erfolg = 'Paragraph gelöscht.';
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&erfolg=geloescht');
+  exit;
 }
 
 // Paragraph speichern (Titel + Inhalt)
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'speichern' && isset($_POST['pid'])) {
   $pid = (int)$_POST['pid'];
   $titel = $_POST['titel'] ?? '';
-  $inhalt = isset($_POST['inhalt']) ? str_replace("\r", "\n", str_replace("\r\n", "\n", $_POST['inhalt'])) : '';
+  $inhalt = isset($_POST['inhalt']) ? gpbMiniNormalisieren($_POST['inhalt']) : '';
   $stmt = $db->prepare("UPDATE `gpb_mini_paragraph` SET titel=?, inhalt=? WHERE id=? AND kursid=?");
   $stmt->bind_param('ssii', $titel, $inhalt, $pid, $kurs->id);
   $stmt->execute();
   $stmt->close();
-  $erfolg = 'Paragraph gespeichert.';
+
+  // "Speichern und weiter bearbeiten" hält das Formular offen, sonst zurück zur Ansicht
+  if (isset($_POST['weiter']) && $_POST['weiter'] === '1') {
+    header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid . '&erfolg=gespeichert');
+  } else {
+    header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&erfolg=gespeichert');
+  }
+  exit;
 }
 
 // Paragraphen nach oben/unten verschieben
@@ -82,7 +113,8 @@ if (isset($_POST['aktion']) && in_array($_POST['aktion'], array('hoch', 'runter'
       $db->query("UPDATE `gpb_mini_paragraph` SET nummer=" . $aktNum . " WHERE id=" . $nachbar->id);
     }
   }
-  $erfolg = 'Reihenfolge geändert.';
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&erfolg=verschoben');
+  exit;
 }
 
 // Paragraphen laden
@@ -97,6 +129,17 @@ $result->free();
 
 // Bearbeiten-Modus für einen bestimmten Paragraph?
 $bearbeitenId = isset($_GET['bearbeiten']) ? (int)$_GET['bearbeiten'] : 0;
+
+// Erfolgsmeldung nach Redirect (PRG-Pattern)
+$erfolgsTexte = array(
+  'hinzugefuegt' => 'Neuer Paragraph hinzugefügt.',
+  'gespeichert'  => 'Paragraph gespeichert.',
+  'geloescht'    => 'Paragraph gelöscht.',
+  'verschoben'   => 'Reihenfolge geändert.',
+);
+if (isset($_GET['erfolg']) && isset($erfolgsTexte[$_GET['erfolg']])) {
+  $erfolg = $erfolgsTexte[$_GET['erfolg']];
+}
 
 require_once 'DozentSeite.php';
 $seite = new DozentSeite('Mini-Kurs: ' . $kurs->titel);
@@ -114,18 +157,23 @@ if (!empty($fehler)): ?>
 
 <h2>Kursinhalt</h2>
 
-<form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">
-  <input type="hidden" name="aktion" value="hinzufuegen" />
-  <button type="submit">+ Paragraph hinzufügen</button>
-</form>
+<!--
+  "+ neuer Paragraph"-Zeilen: funktionieren auch ohne JavaScript (legen sofort einen leeren
+  Paragraph an der gewünschten Position an und springen ins Bearbeiten-Formular). Mit JavaScript
+  wird stattdessen an der Klickstelle direkt ein Titel/Inhalt-Formular eingeblendet, das den
+  Paragraph in einem Schritt mit Inhalt anlegt.
+-->
+<div class="mini-paragraphen" id="mini-paragraphen">
 
-<br />
+  <div class="mini-neu-slot">
+    <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" class="mini-neu-slot-form">
+      <input type="hidden" name="aktion" value="hinzufuegen" />
+      <input type="hidden" name="position" value="0" />
+      <button type="submit" class="mini-neu-btn">+ neuer Paragraph</button>
+    </form>
+  </div>
 
-<?php if (empty($paragraphen)): ?>
-<p><em>Noch keine Paragraphen vorhanden.</em></p>
-<?php else: ?>
-<div class="mini-paragraphen">
-<?php foreach ($paragraphen as $i => $p): ?>
+<?php if (!empty($paragraphen)): foreach ($paragraphen as $i => $p): ?>
   <div class="mini-paragraph" style="border:1px solid #ccc; margin-bottom:1em; padding:0.5em;">
 
     <?php if ($bearbeitenId === (int)$p->id): ?>
@@ -143,6 +191,7 @@ if (!empty($fehler)): ?>
       </div>
       <div style="margin-top:0.5em;">
         <button type="submit">Speichern</button>
+        <button type="submit" name="weiter" value="1">Speichern und weiter bearbeiten</button>
         <a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">Abbrechen</a>
       </div>
     </form>
@@ -182,9 +231,83 @@ if (!empty($fehler)): ?>
     <?php endif; ?>
 
   </div>
-<?php endforeach; ?>
-</div>
+
+  <div class="mini-neu-slot">
+    <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" class="mini-neu-slot-form">
+      <input type="hidden" name="aktion" value="hinzufuegen" />
+      <input type="hidden" name="position" value="<?= $i + 1 ?>" />
+      <button type="submit" class="mini-neu-btn">+ neuer Paragraph</button>
+    </form>
+  </div>
+
+<?php endforeach; else: ?>
+  <p><em>Noch keine Paragraphen vorhanden.</em></p>
 <?php endif; ?>
+
+</div>
+
+<template id="mini-neu-template">
+  <div class="mini-neu-formular" style="border:1px dashed #888; margin:0.5em 0; padding:0.5em; background:#f8f8f8;">
+    <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">
+      <input type="hidden" name="aktion" value="hinzufuegen" />
+      <input type="hidden" name="position" value="" />
+      <div>
+        <label><strong>Titel:</strong><br />
+        <input type="text" name="titel" style="width:100%;" /></label>
+      </div>
+      <div style="margin-top:0.5em;">
+        <label><strong>Inhalt (HTML erlaubt):</strong><br />
+        <textarea name="inhalt" rows="6" style="width:100%;"></textarea></label>
+      </div>
+      <div style="margin-top:0.5em;">
+        <button type="submit">Speichern</button>
+        <button type="button" class="mini-neu-abbrechen">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+(function () {
+  var container = document.getElementById('mini-paragraphen');
+  if (!container) return;
+
+  function schliesseOffeneFormulare() {
+    container.querySelectorAll('.mini-neu-formular').forEach(function (el) { el.remove(); });
+    container.querySelectorAll('.mini-neu-slot-form').forEach(function (f) { f.style.display = ''; });
+  }
+
+  // "+ neuer Paragraph" abfangen und stattdessen Formular inline öffnen
+  container.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form.classList.contains('mini-neu-slot-form')) return;
+    e.preventDefault();
+
+    var position = form.querySelector('input[name="position"]').value;
+    schliesseOffeneFormulare();
+
+    var tpl = document.getElementById('mini-neu-template');
+    var clone = tpl.content.cloneNode(true);
+    clone.querySelector('input[name="position"]').value = position;
+
+    form.style.display = 'none';
+    form.parentNode.appendChild(clone);
+    var titelFeld = form.parentNode.querySelector('input[name="titel"]');
+    if (titelFeld) titelFeld.focus();
+  });
+
+  // Abbrechen im eingeblendeten Formular
+  container.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('mini-neu-abbrechen')) return;
+    var slot = e.target.closest('.mini-neu-slot');
+    if (!slot) return;
+    var formular = slot.querySelector('.mini-neu-formular');
+    if (formular) formular.remove();
+    var slotForm = slot.querySelector('.mini-neu-slot-form');
+    if (slotForm) slotForm.style.display = '';
+  });
+})();
+</script>
 
 <br />
 <a href="kurs_sehen.php?kursid=<?= $kurs->id ?>">Zurück zur Kursseite</a>
