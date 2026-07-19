@@ -187,6 +187,14 @@ if (!empty($fehler)): ?>
       </div>
       <div style="margin-top:0.5em;">
         <label><strong>Inhalt (HTML erlaubt):</strong></label>
+        <div class="mini-format-toolbar" style="margin-bottom:0.3em;">
+          <button type="button" class="mini-format-btn" data-open="&lt;strong&gt;" data-close="&lt;/strong&gt;"><strong>Fett</strong></button>
+          <button type="button" class="mini-format-btn" data-open="&lt;em&gt;" data-close="&lt;/em&gt;"><em>Kursiv</em></button>
+          <button type="button" class="mini-format-btn" data-open="&lt;u&gt;" data-close="&lt;/u&gt;"><u>Unterstrichen</u></button>
+          <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:red&quot;&gt;" data-close="&lt;/span&gt;" style="color:red;">Rot</button>
+          <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
+          <button type="button" class="mini-format-liste-btn">Liste</button>
+        </div>
         <div class="mini-vorschau" style="display:none; border:2px dashed #888; padding:0.5em; margin-bottom:0.3em; background:#fffbe6;">
           <em>Vorschau (noch nicht gespeichert):</em>
           <div class="mini-vorschau-inhalt" style="margin-top:0.3em;"></div>
@@ -262,6 +270,14 @@ if (!empty($fehler)): ?>
       </div>
       <div style="margin-top:0.5em;">
         <label><strong>Inhalt (HTML erlaubt):</strong></label>
+        <div class="mini-format-toolbar" style="margin-bottom:0.3em;">
+          <button type="button" class="mini-format-btn" data-open="&lt;strong&gt;" data-close="&lt;/strong&gt;"><strong>Fett</strong></button>
+          <button type="button" class="mini-format-btn" data-open="&lt;em&gt;" data-close="&lt;/em&gt;"><em>Kursiv</em></button>
+          <button type="button" class="mini-format-btn" data-open="&lt;u&gt;" data-close="&lt;/u&gt;"><u>Unterstrichen</u></button>
+          <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:red&quot;&gt;" data-close="&lt;/span&gt;" style="color:red;">Rot</button>
+          <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
+          <button type="button" class="mini-format-liste-btn">Liste</button>
+        </div>
         <div class="mini-vorschau" style="display:none; border:2px dashed #888; padding:0.5em; margin-bottom:0.3em; background:#fffbe6;">
           <em>Vorschau (noch nicht gespeichert):</em>
           <div class="mini-vorschau-inhalt" style="margin-top:0.3em;"></div>
@@ -337,6 +353,77 @@ if (!empty($fehler)): ?>
       vorschauDiv.style.display = 'none';
       e.target.textContent = 'Vorschau';
     }
+  });
+
+  // Formatierungs-Buttons (Fett, Kursiv, Unterstrichen, Rot, Grün):
+  // Wenn die Markierung bereits genau mit dem Tag-Paar beginnt/endet, wird
+  // es entfernt (Toggle aus). Sonst wird die Markierung damit umschlossen
+  // (Toggle an). Funktioniert zuverlässig, wenn korrekt markiert wurde -
+  // bei "falscher" Markierung entsteht ggf. unsauberer HTML-Code, das ist
+  // laut Auftrag erstmal ok.
+  function miniFormatToggle(textarea, open, close) {
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var value = textarea.value;
+    var selected = value.substring(start, end);
+    var neu, neuStart, neuEnd;
+
+    if (selected.indexOf(open) === 0 && selected.slice(-close.length) === close) {
+      neu = selected.substring(open.length, selected.length - close.length);
+      neuStart = start;
+      neuEnd = start + neu.length;
+    } else {
+      neu = open + selected + close;
+      neuStart = start;
+      neuEnd = start + neu.length;
+    }
+    textarea.value = value.substring(0, start) + neu + value.substring(end);
+    textarea.focus();
+    textarea.setSelectionRange(neuStart, neuEnd);
+  }
+
+  container.addEventListener('click', function (e) {
+    var btn = e.target.closest('.mini-format-btn');
+    if (!btn) return;
+    var form = btn.closest('form');
+    var textarea = form ? form.querySelector('textarea[name="inhalt"]') : null;
+    if (!textarea) return;
+    miniFormatToggle(textarea, btn.getAttribute('data-open'), btn.getAttribute('data-close'));
+  });
+
+  // Liste/Aufzählung: markierte Zeilen werden in <ul><li>...</li></ul>
+  // umgewandelt bzw. wieder zurück, wenn die Markierung bereits eine
+  // solche Liste ist.
+  container.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('mini-format-liste-btn')) return;
+    var form = e.target.closest('form');
+    var textarea = form ? form.querySelector('textarea[name="inhalt"]') : null;
+    if (!textarea) return;
+
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var value = textarea.value;
+    var selected = value.substring(start, end);
+    var trimmed = selected.trim();
+    var neu;
+
+    if (trimmed.indexOf('<ul>') === 0 && trimmed.slice(-5) === '</ul>') {
+      var innerLines = trimmed.substring(4, trimmed.length - 5).split('\n').map(function (line) {
+        line = line.trim();
+        if (line.indexOf('<li>') === 0 && line.slice(-5) === '</li>') {
+          return line.substring(4, line.length - 5);
+        }
+        return line;
+      }).filter(function (l) { return l.length > 0; });
+      neu = innerLines.join('\n');
+    } else {
+      var lines = selected.split('\n').filter(function (l) { return l.trim().length > 0; });
+      neu = '<ul>\n' + lines.map(function (l) { return '<li>' + l.trim() + '</li>'; }).join('\n') + '\n</ul>';
+    }
+
+    textarea.value = value.substring(0, start) + neu + value.substring(end);
+    textarea.focus();
+    textarea.setSelectionRange(start, start + neu.length);
   });
 })();
 </script>
