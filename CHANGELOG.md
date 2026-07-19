@@ -16,7 +16,7 @@
 - Standardmäßig eingeklappt: nur Titel, Zeitraum (KW/Beginn/Ende), Klassen, Dozenten und die Aktionsleiste sind sichtbar. Der Rest (Ort, Raum, Anzahl TN, Moodle/Mini, Zeugnis-Modul, und bei Verwaltung/Leitung zusätzlich PV, IHK-Projektantrag, Planungsnotiz, Noten, Bewertung u. a.) lässt sich per Button ein-/ausblenden.
 - Ohne JavaScript bleiben alle Zeilen sichtbar (kein dauerhaft verstecktes Formular).
 
-## 2026-07-17##
+## 2026-07-17
 
 ### Mini (Betreuer-Feedback)
 - Moodle- und Mini-Spalte in der Kursliste sowie im Kurs-Property-Sheet zu einer gemeinsamen Zelle "Moodle / Mini" zusammengelegt (`Kurs.php` sowie die Unterklassen `dozent/DozentKurs.php`, `tn/TnKurs.php`, `verwaltung/VerwaltungKurs.php`, `leitung/LeitungKurs.php`).
