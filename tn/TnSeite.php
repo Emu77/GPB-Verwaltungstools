@@ -30,7 +30,9 @@ class TnSeite extends Seite {
   padding:10px 10px 1em 0;
 }
 </style>
-<div id="todos"><h2 class="todo">TODO</h2>
+<div id="todos">
+<details>
+  <summary class="todo"><?= count($todos) ?> Todo<?= count($todos)==1 ? '' : 's' ?> aufklappen</summary>
 <table border="1" cellspacing="0" style="border-collapse:collapse;">
   <tr>
     <th>Kurs</th>
@@ -53,6 +55,7 @@ class TnSeite extends Seite {
       }
 ?>
 </table>
+</details>
 <?php
     }
   }
