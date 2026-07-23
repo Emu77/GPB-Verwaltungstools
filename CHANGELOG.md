@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-23
+
+### TODO-Liste (Teilnehmer & Dozent)
+- Die "TODO"-Tabelle mit offenen Bewertungen/Berichten wird jetzt standardmäßig eingeklappt angezeigt, statt immer vollständig sichtbar zu sein (`tn/TnSeite.php`, `dozent/DozentSeite.php`).
+- Umsetzung über natives HTML `<details>`/`<summary>`, ganz ohne JavaScript.
+- Der Klapptext zeigt die aktuelle Anzahl offener Todos an (z. B. "59 Todos aufklappen" / "1 Todo aufklappen") und wechselt je nach Zustand automatisch zwischen "aufklappen" und "zuklappen" (reines CSS über den `details[open]`-Selektor).
+
+### Login / Deployment
+- `db.php` um eine Umgebungs-Weiche ergänzt: lädt je nach `$_SERVER['SERVER_NAME']` automatisch `db.local.php` (lokal) oder `db.prod.php` (Produktion), statt fest codierter Zugangsdaten in einer einzigen Datei.
+- MySQL-Passwort für den Live-Nutzer `web32` erneuert und in `db.prod.php`/`db.php` synchronisiert.
+- Ursache für gescheiterte Teilnehmer-Logins geklärt: kein Code-Fehler, sondern Tests mit nicht existierenden Nutzernamen; mit vorhandenen Testnutzern (`gpb_tn`, Passwort `tn`) funktioniert der Login korrekt.
+
 ## 2026-07-19
 
 ### Kurs-PropertySheet
