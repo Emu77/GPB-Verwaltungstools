@@ -67,7 +67,11 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_hochladen' && isset(
     }
   }
 
-  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid . '&erfolg=' . $ergebnis);
+  if ($ergebnis === 'anhang_fehler') {
+    $_SESSION['mini_fehler'] = 'Anhang konnte nicht hochgeladen werden (siehe php_error_log für Details).';
+  }
+  // Kein Erfolgshinweis nötig: die neue Datei erscheint direkt in der Anhangliste.
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid);
   exit;
 }
 
@@ -84,16 +88,10 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_loeschen' && isset($
   $anhang = $res->fetch_object();
   $res->free();
   if ($anhang) {
-    $pfad = miniAnhangPfad($anhang->dozentid, $anhang->gespeicherter_dateiname);
-    if (is_file($pfad)) {
-      unlink($pfad);
-    }
-    $stmt = $db->prepare("DELETE FROM `gpb_mini_anhang` WHERE id=?");
-    $stmt->bind_param('i', $anhangid);
-    $stmt->execute();
-    $stmt->close();
+    miniAnhangLoeschen($anhangid);
   }
-  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid . '&erfolg=anhang_geloescht');
+  // Kein Erfolgshinweis nötig: der Anhang verschwindet direkt aus der Liste.
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid);
   exit;
 }
 
@@ -127,27 +125,36 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'hinzufuegen') {
   $neueId = $stmt->insert_id;
   $stmt->close();
 
-  // Direkt ins Bearbeiten-Formular des neuen Paragraphen springen
-  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $neueId . '&erfolg=hinzugefuegt');
+  // Direkt ins Bearbeiten-Formular des neuen Paragraphen springen - kein
+  // Erfolgshinweis nötig, der Dozent sieht den neuen Paragraph sofort im
+  // Bearbeitungsmodus.
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $neueId);
   exit;
 }
 
-// Paragraph löschen
+// Paragraph löschen (inkl. aller Anhänge, damit keine Dateileichen bleiben)
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'loeschen' && isset($_POST['pid'])) {
   $pid = (int)$_POST['pid'];
-  $stmt = $db->prepare("DELETE FROM `gpb_mini_paragraph` WHERE id=? AND kursid=?");
-  $stmt->bind_param('ii', $pid, $kurs->id);
-  $stmt->execute();
-  $stmt->close();
-  // Umnummerieren nach Löschung
-  $res = $db->query("SELECT id FROM `gpb_mini_paragraph` WHERE kursid=" . $kurs->id . " ORDER BY nummer ASC");
-  $num = 1;
-  while ($row = $res->fetch_object()) {
-    $db->query("UPDATE `gpb_mini_paragraph` SET nummer=" . $num . " WHERE id=" . $row->id);
-    $num++;
-  }
+  $res = $db->query("SELECT id FROM `gpb_mini_paragraph` WHERE id=" . $pid . " AND kursid=" . $kurs->id . " LIMIT 1");
+  $paragraphOk = $res->fetch_object();
   $res->free();
-  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&erfolg=geloescht');
+  if ($paragraphOk) {
+    miniAnhaengeVonParagraphLoeschen($pid);
+    $stmt = $db->prepare("DELETE FROM `gpb_mini_paragraph` WHERE id=? AND kursid=?");
+    $stmt->bind_param('ii', $pid, $kurs->id);
+    $stmt->execute();
+    $stmt->close();
+    // Umnummerieren nach Löschung
+    $res = $db->query("SELECT id FROM `gpb_mini_paragraph` WHERE kursid=" . $kurs->id . " ORDER BY nummer ASC");
+    $num = 1;
+    while ($row = $res->fetch_object()) {
+      $db->query("UPDATE `gpb_mini_paragraph` SET nummer=" . $num . " WHERE id=" . $row->id);
+      $num++;
+    }
+    $res->free();
+  }
+  // Kein Erfolgshinweis nötig: der Paragraph verschwindet direkt aus der Liste.
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id);
   exit;
 }
 
@@ -161,11 +168,15 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'speichern' && isset($_POST[
   $stmt->execute();
   $stmt->close();
 
-  // "Speichern und weiter bearbeiten" hält das Formular offen, sonst zurück zur Ansicht
+  // "Speichern und weiter bearbeiten" hält das Formular offen - hier braucht es
+  // eine Meldung, weil sich sonst optisch nichts sichtbar verändert. Beim
+  // normalen "Speichern" springt man zurück in die Ansicht und sieht den
+  // gespeicherten Inhalt direkt, da ist keine Meldung nötig.
   if (isset($_POST['weiter']) && $_POST['weiter'] === '1') {
-    header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid . '&erfolg=gespeichert');
+    $_SESSION['mini_erfolg'] = 'Paragraph gespeichert.';
+    header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid);
   } else {
-    header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&erfolg=gespeichert');
+    header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id);
   }
   exit;
 }
@@ -187,7 +198,8 @@ if (isset($_POST['aktion']) && in_array($_POST['aktion'], array('hoch', 'runter'
       $db->query("UPDATE `gpb_mini_paragraph` SET nummer=" . $aktNum . " WHERE id=" . $nachbar->id);
     }
   }
-  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&erfolg=verschoben');
+  // Kein Erfolgshinweis nötig: die neue Reihenfolge ist direkt sichtbar.
+  header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id);
   exit;
 }
 
@@ -204,27 +216,26 @@ $result->free();
 // Bearbeiten-Modus für einen bestimmten Paragraph?
 $bearbeitenId = isset($_GET['bearbeiten']) ? (int)$_GET['bearbeiten'] : 0;
 
-// Erfolgsmeldung nach Redirect (PRG-Pattern)
-$erfolgsTexte = array(
-  'hinzugefuegt' => 'Neuer Paragraph hinzugefügt.',
-  'gespeichert'  => 'Paragraph gespeichert.',
-  'geloescht'    => 'Paragraph gelöscht.',
-  'verschoben'   => 'Reihenfolge geändert.',
-  'anhang_hochgeladen' => 'Anhang hochgeladen.',
-  'anhang_geloescht'   => 'Anhang gelöscht.',
-);
-if (isset($_GET['erfolg']) && isset($erfolgsTexte[$_GET['erfolg']])) {
-  $erfolg = $erfolgsTexte[$_GET['erfolg']];
-} elseif (isset($_GET['erfolg']) && $_GET['erfolg'] === 'anhang_fehler') {
-  $fehler = 'Anhang konnte nicht hochgeladen werden (siehe php_error_log für Details).';
+// Erfolgs-/Fehlermeldung nach Redirect (PRG-Pattern) - über die Session
+// übergeben statt über die URL, und nur dort gesetzt, wo der Dozent das
+// Ergebnis nicht ohnehin sofort sieht (siehe Kommentare bei den jeweiligen
+// Aktionen weiter oben).
+if (!empty($_SESSION['mini_erfolg'])) {
+  $erfolg = $_SESSION['mini_erfolg'];
+  unset($_SESSION['mini_erfolg']);
+}
+if (!empty($_SESSION['mini_fehler'])) {
+  $fehler = $_SESSION['mini_fehler'];
+  unset($_SESSION['mini_fehler']);
 }
 
+$miniSeiteOhneTodos = true; // auf der Mini-Seite werden die allgemeinen Todos nicht angezeigt
 require_once 'DozentSeite.php';
 $seite = new DozentSeite('Mini-Kurs: ' . $kurs->titel);
 $seite->anfangGenerieren();
 
 // Kursinfos
-$kurs->makeSehen('sehen');
+$kurs->makeSehen('sehen', true);
 
 if (!empty($fehler)): ?>
 <div class="nok"><?= htmlspecialchars($fehler) ?></div>
@@ -256,6 +267,7 @@ if (!empty($fehler)): ?>
 
     <?php if ($bearbeitenId === (int)$p->id): ?>
     <!-- Bearbeitungsformular -->
+    <div class="mini-paragraph-bearbeiten-formular">
     <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">
       <input type="hidden" name="aktion" value="speichern" />
       <input type="hidden" name="pid" value="<?= $p->id ?>" />
@@ -273,9 +285,10 @@ if (!empty($fehler)): ?>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
           <button type="button" class="mini-format-liste-btn">Liste</button>
         </div>
-        <div class="mini-vorschau" style="display:none; border:2px dashed #888; padding:0.5em; margin-bottom:0.3em; background:#fffbe6;">
-          <em>Vorschau (noch nicht gespeichert):</em>
-          <div class="mini-vorschau-inhalt" style="margin-top:0.3em;"></div>
+        <!-- Die Vorschau bekommt bewusst KEIN eigenes Gelb/Rahmen-Styling -
+             sie soll so aussehen wie der spätere, gespeicherte Paragraph. -->
+        <div class="mini-vorschau mini-inhalt" style="display:none; margin-bottom:0.3em;">
+          <div class="mini-vorschau-inhalt"></div>
         </div>
         <textarea name="inhalt" rows="10" style="width:100%;"><?= htmlspecialchars($p->inhalt) ?></textarea>
       </div>
@@ -283,6 +296,7 @@ if (!empty($fehler)): ?>
         <button type="submit">Speichern</button>
         <button type="submit" name="weiter" value="1">Speichern und weiter bearbeiten</button>
         <button type="button" class="mini-vorschau-btn">Vorschau</button>
+        <button type="button" class="mini-vorschau-aktualisieren-btn" style="display:none;">Vorschau aktualisieren</button>
         <a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">Abbrechen</a>
       </div>
     </form>
@@ -294,21 +308,20 @@ if (!empty($fehler)): ?>
       <?php if (empty($anhaenge)): ?>
       <div><em>Keine Anhänge.</em></div>
       <?php else: ?>
-      <ul style="margin:0.3em 0;">
+      <div style="margin:0.3em 0;">
         <?php foreach ($anhaenge as $a): ?>
-        <li>
-          <a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a>
-          (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)
-          <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" style="display:inline;"
+        <div style="display:inline-block; vertical-align:top;">
+          <?php miniAnhangAnzeigen($a, '../'); ?>
+          <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>"
                 onsubmit="return confirm('Anhang wirklich löschen?');">
             <input type="hidden" name="aktion" value="anhang_loeschen" />
             <input type="hidden" name="anhangid" value="<?= $a->id ?>" />
             <input type="hidden" name="pid" value="<?= $p->id ?>" />
-            <button type="submit" title="Anhang löschen">🗑️</button>
+            <button type="submit" title="Anhang löschen">🗑️ Anhang löschen</button>
           </form>
-        </li>
+        </div>
         <?php endforeach; ?>
-      </ul>
+      </div>
       <?php endif; ?>
       <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" enctype="multipart/form-data">
         <input type="hidden" name="aktion" value="anhang_hochladen" />
@@ -316,6 +329,7 @@ if (!empty($fehler)): ?>
         <input type="file" name="datei" required />
         <button type="submit">Anhang hochladen</button>
       </form>
+    </div>
     </div>
 
     <?php else: ?>
@@ -339,7 +353,7 @@ if (!empty($fehler)): ?>
         </form>
         <?php endif; ?>
         <!-- Bearbeiten -->
-        <a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>&amp;bearbeiten=<?= $p->id ?>" title="Bearbeiten">✏️</a>
+        <a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>&amp;bearbeiten=<?= $p->id ?>" title="Paragraph bearbeiten">✏️ Paragraph bearbeiten</a>
         <!-- Löschen -->
         <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" style="display:inline;"
               onsubmit="return confirm('Paragraph wirklich löschen?');">
@@ -354,11 +368,9 @@ if (!empty($fehler)): ?>
     <?php if (!empty($anhaengeAnsicht)): ?>
     <div class="mini-anhaenge" style="margin-top:0.5em;">
       <strong>Anhänge:</strong>
-      <ul style="margin:0.3em 0;">
-        <?php foreach ($anhaengeAnsicht as $a): ?>
-        <li><a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a> (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)</li>
-        <?php endforeach; ?>
-      </ul>
+      <?php foreach ($anhaengeAnsicht as $a): ?>
+        <?php miniAnhangAnzeigen($a, '../'); ?>
+      <?php endforeach; ?>
     </div>
     <?php endif; ?>
     <?php endif; ?>
@@ -398,15 +410,15 @@ if (!empty($fehler)): ?>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
           <button type="button" class="mini-format-liste-btn">Liste</button>
         </div>
-        <div class="mini-vorschau" style="display:none; border:2px dashed #888; padding:0.5em; margin-bottom:0.3em; background:#fffbe6;">
-          <em>Vorschau (noch nicht gespeichert):</em>
-          <div class="mini-vorschau-inhalt" style="margin-top:0.3em;"></div>
+        <div class="mini-vorschau mini-inhalt" style="display:none; margin-bottom:0.3em;">
+          <div class="mini-vorschau-inhalt"></div>
         </div>
         <textarea name="inhalt" rows="6" style="width:100%;"></textarea>
       </div>
       <div style="margin-top:0.5em;">
         <button type="submit">Speichern</button>
         <button type="button" class="mini-vorschau-btn">Vorschau</button>
+        <button type="button" class="mini-vorschau-aktualisieren-btn" style="display:none;">Vorschau aktualisieren</button>
         <button type="button" class="mini-neu-abbrechen">Abbrechen</button>
       </div>
     </form>
@@ -453,26 +465,43 @@ if (!empty($fehler)): ?>
     if (slotForm) slotForm.style.display = '';
   });
 
-  // Vorschau-Button: kopiert den Textarea-Inhalt in ein deutlich als Vorschau
-  // gekennzeichnetes div darüber (gestrichelter Rahmen), \n wird zu <br>.
-  // Erneutes Klicken blendet die Vorschau wieder aus.
+  // Vorschau-Button: kopiert den Textarea-Inhalt in ein Vorschau-div, das
+  // dieselbe Klasse (mini-inhalt) wie die spätere echte Anzeige trägt - die
+  // Vorschau soll wie das fertige Ergebnis aussehen, kein Extra-Styling.
+  // Ist die Vorschau eingeblendet, erscheint daneben "Vorschau aktualisieren",
+  // um den Inhalt neu zu übernehmen, ohne die Vorschau erst zu schließen.
+  function miniVorschauFuellen(form) {
+    var textarea = form.querySelector('textarea[name="inhalt"]');
+    var vorschauInhalt = form.querySelector('.mini-vorschau-inhalt');
+    if (!textarea || !vorschauInhalt) return;
+    vorschauInhalt.innerHTML = textarea.value.replace(/\n/g, '<br>');
+  }
+
   container.addEventListener('click', function (e) {
     if (!e.target.classList.contains('mini-vorschau-btn')) return;
     var form = e.target.closest('form');
     if (!form) return;
-    var textarea = form.querySelector('textarea[name="inhalt"]');
     var vorschauDiv = form.querySelector('.mini-vorschau');
-    var vorschauInhalt = form.querySelector('.mini-vorschau-inhalt');
-    if (!textarea || !vorschauDiv || !vorschauInhalt) return;
+    var aktualisierenBtn = form.querySelector('.mini-vorschau-aktualisieren-btn');
+    if (!vorschauDiv) return;
 
     if (vorschauDiv.style.display === 'none' || !vorschauDiv.style.display) {
-      vorschauInhalt.innerHTML = textarea.value.replace(/\n/g, '<br>');
+      miniVorschauFuellen(form);
       vorschauDiv.style.display = 'block';
       e.target.textContent = 'Vorschau ausblenden';
+      if (aktualisierenBtn) aktualisierenBtn.style.display = '';
     } else {
       vorschauDiv.style.display = 'none';
       e.target.textContent = 'Vorschau';
+      if (aktualisierenBtn) aktualisierenBtn.style.display = 'none';
     }
+  });
+
+  container.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('mini-vorschau-aktualisieren-btn')) return;
+    var form = e.target.closest('form');
+    if (!form) return;
+    miniVorschauFuellen(form);
   });
 
   // Formatierungs-Buttons (Fett, Kursiv, Unterstrichen, Rot, Grün):

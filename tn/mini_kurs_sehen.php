@@ -27,12 +27,13 @@ while ($row = $result->fetch_object()) {
 }
 $result->free();
 
+$miniSeiteOhneTodos = true; // auf der Mini-Seite werden die allgemeinen Todos nicht angezeigt
 require_once 'TnSeite.php';
 $seite = new TnSeite('Mini-Kurs: ' . $kurs->titel);
 $seite->anfangGenerieren();
 
 // Kursinfos (wie kurs_sehen.php)
-$kurs->makeSehen('sehen');
+$kurs->makeSehen('sehen', true);
 ?>
 
 <h2>Kursinhalt</h2>
@@ -49,11 +50,9 @@ $kurs->makeSehen('sehen');
     <?php if (!empty($anhaenge)): ?>
     <div class="mini-anhaenge" style="margin-top:0.5em;">
       <strong>Anhänge:</strong>
-      <ul style="margin:0.3em 0;">
-        <?php foreach ($anhaenge as $a): ?>
-        <li><a href="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></a> (<?= miniAnhangGroesseAnzeigen($a->groesse) ?>)</li>
-        <?php endforeach; ?>
-      </ul>
+      <?php foreach ($anhaenge as $a): ?>
+        <?php miniAnhangAnzeigen($a, '../'); ?>
+      <?php endforeach; ?>
     </div>
     <?php endif; ?>
   </div>

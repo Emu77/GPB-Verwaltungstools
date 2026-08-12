@@ -381,8 +381,16 @@ document.querySelectorAll('#<?= $tableId ?> tr.kurs-ps-mehr').forEach(function (
 <?php
   }
   
-  function makeSehen($classname='') {
+  // $kompaktToggle=true (bislang nur auf der Mini-Seite genutzt): der Button
+  // schaltet nicht nur einzelne Zeilen aus, sondern zwischen dieser normalen
+  // Ansicht und einer eigens generierten, kompakteren Tabelle
+  // (makeSehenKompakt) um.
+  function makeSehen($classname='', $kompaktToggle=false) {
     global $moodleisttest;
+    if ($kompaktToggle) {
+      $this->makeSehenMitKompaktToggle($classname);
+      return;
+    }
     $tableId=$this->neuePropertySheetId();
     $this->makePropertySheetToggleFunktionEinmalig();
 ?>
@@ -470,6 +478,178 @@ document.querySelectorAll('#<?= $tableId ?> tr.kurs-ps-mehr').forEach(function (
 <br />
 <?php
   }
-  
+
+  // Erzeugt zweimal ein PropertySheet: die normale Ansicht (alle Zeilen) und
+  // eine kompakte Variante (KW/Beginn/Ende -> "Kurszeitraum", Ort+Raum in
+  // einer Zeile, Klassen und Dozenten nebeneinander). Der Button schaltet
+  // zwischen beiden um, statt einzelne Zeilen aus-/einzublenden.
+  function makeSehenMitKompaktToggle($classname='') {
+    $vollId = $this->neuePropertySheetId();
+    $kompaktId = $this->neuePropertySheetId();
+    $this->makeKompaktToggleFunktionEinmalig();
+?>
+  <button type="button" class="kurs-ps-toggle-btn" data-eingeklappt="1" onclick="kursPropertysheetKompaktToggle('<?= $vollId ?>','<?= $kompaktId ?>', this)">▲ weniger anzeigen</button>
+<?php
+    $this->makeSehenVollesTabelle($vollId, $classname);
+    $this->makeSehenKompakteTabelle($kompaktId, $classname);
+?>
+<script>
+document.getElementById('<?= $vollId ?>').style.display = 'none';
+</script>
+<br />
+<?php
+  }
+
+  function makeKompaktToggleFunktionEinmalig() {
+    static $ausgegeben = false;
+    if ($ausgegeben) return;
+    $ausgegeben = true;
+?>
+<script>
+function kursPropertysheetKompaktToggle(vollId, kompaktId, btn) {
+  var eingeklappt = btn.getAttribute('data-eingeklappt') !== '0';
+  document.getElementById(vollId).style.display = eingeklappt ? '' : 'none';
+  document.getElementById(kompaktId).style.display = eingeklappt ? 'none' : '';
+  btn.setAttribute('data-eingeklappt', eingeklappt ? '0' : '1');
+  btn.textContent = eingeklappt ? '▼ mehr anzeigen' : '▲ weniger anzeigen';
+}
+</script>
+<?php
+  }
+
+  // Volle Tabelle - inhaltlich identisch zur normalen makeSehen()-Tabelle,
+  // aber ohne die zeilenweise kurs-ps-mehr-Klapplogik (hier klappt der Button
+  // die ganze Tabelle gegen die kompakte Tabelle).
+  function makeSehenVollesTabelle($tableId, $classname='') {
+    global $moodleisttest;
+?>
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
+  <tr>
+    <th>KW</th>
+    <td>
+<?php
+    if(count($this->kw)<=3) {
+      foreach($this->kw as $kw) {
+?>
+      <div>KW <?= substr($kw,5) ?></div>
+<?php
+      }
+    } else {
+?>
+      <div>KW <?= substr($this->kw[0],5) ?> - <?= substr($this->kw[count($this->kw)-1],5) ?></div>
+      <div>(<?= count($this->kw) ?> Wo)</div>
+<?php
+    }
+?>
+    </td>
+  </tr>
+  <tr>
+    <th>Beginn</th>
+    <td><?= date('d.m.Y',$this->von) ?></td>
+  </tr>
+  <tr>
+    <th>Ende</th>
+    <td><?= date('d.m.Y',$this->bis) ?></td>
+  </tr>
+  <tr>
+    <th>Titel</th>
+<?php
+    $this->makeTitelTd();
+?>
+  </tr>
+  <tr>
+    <th>Ort</th>
+    <td><?= $this->ort ?></td>
+  </tr>
+  <tr>
+    <th>Raum</th>
+    <td><?= $this->raum ?></td>
+  </tr>
+  <tr>
+    <th>Klassen</th>
+<?php
+    $this->makeKlassenTd();
+?>
+  </tr>
+  <tr>
+    <th>Anzahl TN</th>
+<?php
+    $this->makeAnzahlTNTd(false);
+?>
+  </tr>
+  <tr>
+    <th>Dozenten</th>
+<?php
+    $this->makeDozentenTd();
+?>
+  </tr>
+  <tr>
+    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
+<?php
+    $this->makeMoodleMiniTd();
+?>
+  </tr>
+  <tr>
+    <th>Zeugnis-Modul</th>
+    <td><?= empty($this->modulid) ? '(keines)' : $this->modultitel.' ('.$this->moduldauer.' Wochen)' ?></td>
+  </tr>
+  <tr>
+    <th></th>
+<?php
+    $this->makeBearbeitenTd();
+?>
+  </tr>
+</table>
+<?php
+  }
+
+  // Kompakte Tabelle: KW/Beginn/Ende -> "Kurszeitraum", Ort+Raum
+  // zusammengefasst, Klassen und Dozenten nebeneinander in einer Zeile.
+  function makeSehenKompakteTabelle($tableId, $classname='') {
+?>
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse; display:none;" class="<?= $classname ?>">
+  <tr>
+    <th>Kurszeitraum</th>
+    <td>
+      <div><?= date('d.m.Y',$this->von) ?> - <?= date('d.m.Y',$this->bis) ?></div>
+<?php
+    if(count($this->kw)<=3) {
+      foreach($this->kw as $kw) {
+?>
+      <div>KW <?= substr($kw,5) ?></div>
+<?php
+      }
+    } else {
+?>
+      <div>KW <?= substr($this->kw[0],5) ?> - <?= substr($this->kw[count($this->kw)-1],5) ?> (<?= count($this->kw) ?> Wo)</div>
+<?php
+    }
+?>
+    </td>
+  </tr>
+  <tr>
+    <th>Titel</th>
+<?php
+    $this->makeTitelTd();
+?>
+  </tr>
+  <tr>
+    <th>Ort/Raum</th>
+    <td><?= $this->ort ?><?= (!empty($this->ort) && !empty($this->raum)) ? ' / ' : '' ?><?= $this->raum ?></td>
+  </tr>
+  <tr>
+    <th>Klassen</th>
+<?php
+    $this->makeKlassenTd();
+?>
+    <th>Dozenten</th>
+<?php
+    $this->makeDozentenTd();
+?>
+  </tr>
+</table>
+<?php
+  }
+
 }
 ?>

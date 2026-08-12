@@ -10,8 +10,8 @@ class TnSeite extends Seite {
   }
    function menueGenerieren() {
     parent::menueGenerieren();
-    global $todos;
-    if(!empty($todos)) {
+    global $todos, $miniSeiteOhneTodos;
+    if(!empty($todos) && empty($miniSeiteOhneTodos)) {
 ?>
 </div>
 <style>
@@ -40,7 +40,7 @@ class TnSeite extends Seite {
 }
 </style>
 <div id="todos">
-<details>
+<details open>
   <summary class="todo"><?= count($todos) ?> Todo<?= count($todos)==1 ? '' : 's' ?> <span class="aufklappen">aufklappen</span><span class="zuklappen">zuklappen</span></summary>
 <table border="1" cellspacing="0" style="border-collapse:collapse;">
   <tr>
