@@ -80,8 +80,22 @@ if (!is_file($pfad)) {
 
 $dateinameSauber = str_replace(array("\r", "\n", '"'), '', $anhang->dateiname);
 
-header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename="' . $dateinameSauber . '"');
+// Bilder werden inline mit korrektem Mime-Type ausgeliefert, damit sie per
+// <img>-Tag (Vorschaubild) angezeigt werden können. Alles andere bleibt ein
+// erzwungener Download.
+$bildMimeTypen = array(
+  'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+  'svg' => 'image/svg+xml', 'gif' => 'image/gif', 'webp' => 'image/webp',
+);
+$ext = strtolower(pathinfo($anhang->dateiname, PATHINFO_EXTENSION));
+
+if (isset($bildMimeTypen[$ext])) {
+  header('Content-Type: ' . $bildMimeTypen[$ext]);
+  header('Content-Disposition: inline; filename="' . $dateinameSauber . '"');
+} else {
+  header('Content-Type: application/octet-stream');
+  header('Content-Disposition: attachment; filename="' . $dateinameSauber . '"');
+}
 header('Content-Length: ' . filesize($pfad));
 header('X-Content-Type-Options: nosniff');
 readfile($pfad);
