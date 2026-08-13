@@ -452,8 +452,13 @@ if (!empty($fehler)): ?>
 </div>
 
 <!-- Zentrale Anhang-Übersicht: alle Anhänge dieses Kurses auf einen Blick -->
-<details style="margin-top:1.5em;">
-  <summary><strong><?= count($alleAnhaenge) ?> Anhänge in diesem Kurs</strong> (Übersicht aufklappen)</summary>
+<style>
+.mini-anhaenge-uebersicht .zuklappen { display:none; }
+.mini-anhaenge-uebersicht[open] .aufklappen { display:none; }
+.mini-anhaenge-uebersicht[open] .zuklappen { display:inline; }
+</style>
+<details class="mini-anhaenge-uebersicht" style="margin-top:1.5em;">
+  <summary><strong><?= count($alleAnhaenge) ?> Anhänge in diesem Kurs</strong> (<span class="aufklappen">Übersicht aufklappen</span><span class="zuklappen">Übersicht zuklappen</span>)</summary>
   <?php if (empty($alleAnhaenge)): ?>
   <p><em>Noch keine Anhänge in diesem Kurs.</em></p>
   <?php else: ?>
