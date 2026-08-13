@@ -301,6 +301,13 @@ if (!empty($fehler)): ?>
       </div>
     </form>
 
+    <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>"
+          onsubmit="return confirm('Paragraph wirklich löschen (inkl. aller Anhänge)?');" style="margin-top:0.3em;">
+      <input type="hidden" name="aktion" value="loeschen" />
+      <input type="hidden" name="pid" value="<?= $p->id ?>" />
+      <button type="submit" title="Paragraph löschen">🗑️ Paragraph löschen</button>
+    </form>
+
     <!-- Anhänge (eigenes Formular mit enctype=multipart, unabhängig vom Bearbeiten-Formular) -->
     <div class="mini-anhaenge" style="margin-top:1em; padding-top:0.5em; border-top:1px solid #ddd;">
       <strong>Anhänge:</strong>
