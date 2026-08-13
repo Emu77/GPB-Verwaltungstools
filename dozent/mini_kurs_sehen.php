@@ -33,23 +33,40 @@ function gpbMiniAnhangDateinameErzeugen($originalName) {
   return bin2hex(random_bytes(16)) . ($extSauber !== '' ? '.' . $extSauber : '');
 }
 
+// Erlaubte Dateitypen und maximale Größe für Mini-Anhänge
+define('GPB_MINI_ANHANG_ERLAUBTE_ENDUNGEN', array(
+  'jpg', 'jpeg', 'png', 'svg', 'gif', 'webp', // Bilder
+  'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', // Dokumente
+));
+define('GPB_MINI_ANHANG_MAX_BYTES', 15 * 1024 * 1024); // 15 MB
+
 // Anhang hochladen
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_hochladen' && isset($_POST['pid'])) {
   $pid = (int)$_POST['pid'];
   $ergebnis = 'anhang_fehler'; // Standard: Fehler, wird unten bei Erfolg überschrieben
+  $fehlerText = 'Anhang konnte nicht hochgeladen werden (siehe php_error_log für Details).';
 
   // Prüfen, dass der Paragraph wirklich zu diesem Kurs gehört
   $res = $db->query("SELECT id FROM `gpb_mini_paragraph` WHERE id=" . $pid . " AND kursid=" . $kurs->id . " LIMIT 1");
   $paragraphOk = $res->fetch_object();
   $res->free();
 
+  $originalName = isset($_FILES['datei']) ? basename($_FILES['datei']['name']) : '';
+  $endung = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
   if (!$paragraphOk) {
     error_log('Mini-Anhang-Upload: Paragraph ' . $pid . ' gehört nicht zu Kurs ' . $kurs->id);
   } elseif (!isset($_FILES['datei']) || $_FILES['datei']['error'] !== UPLOAD_ERR_OK) {
     $fehlerCode = isset($_FILES['datei']) ? $_FILES['datei']['error'] : 'kein $_FILES[datei]';
     error_log('Mini-Anhang-Upload: Datei-Upload-Fehler, error-Code=' . $fehlerCode . ' (siehe PHP-Doku UPLOAD_ERR_*)');
+    if ($fehlerCode === UPLOAD_ERR_INI_SIZE || $fehlerCode === UPLOAD_ERR_FORM_SIZE) {
+      $fehlerText = 'Datei ist zu groß.';
+    }
+  } elseif (!in_array($endung, GPB_MINI_ANHANG_ERLAUBTE_ENDUNGEN, true)) {
+    $fehlerText = 'Dateityp ".' . htmlspecialchars($endung) . '" ist nicht erlaubt. Erlaubt: ' . implode(', ', GPB_MINI_ANHANG_ERLAUBTE_ENDUNGEN) . '.';
+  } elseif ((int)$_FILES['datei']['size'] > GPB_MINI_ANHANG_MAX_BYTES) {
+    $fehlerText = 'Datei ist zu groß (max. ' . round(GPB_MINI_ANHANG_MAX_BYTES / 1024 / 1024) . ' MB, hochgeladen: ' . miniAnhangGroesseAnzeigen($_FILES['datei']['size']) . ').';
   } else {
-    $originalName = basename($_FILES['datei']['name']);
     $groesse = (int)$_FILES['datei']['size'];
     $gespeichert = gpbMiniAnhangDateinameErzeugen($originalName);
 
@@ -68,7 +85,7 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_hochladen' && isset(
   }
 
   if ($ergebnis === 'anhang_fehler') {
-    $_SESSION['mini_fehler'] = 'Anhang konnte nicht hochgeladen werden (siehe php_error_log für Details).';
+    $_SESSION['mini_fehler'] = $fehlerText;
   }
   // Kein Erfolgshinweis nötig: die neue Datei erscheint direkt in der Anhangliste.
   header('Location: mini_kurs_sehen.php?kursid=' . $kurs->id . '&bearbeiten=' . $pid);
@@ -213,6 +230,24 @@ while ($row = $result->fetch_object()) {
 }
 $result->free();
 
+// Alle Anhänge dieses Kurses auf einen Blick laden (für die zentrale
+// Anhang-Übersicht weiter unten), inkl. Paragraph-Titel und ob der Anhang
+// im Paragraph-Text verwendet (verlinkt) wird oder "verwaist" ist.
+$alleAnhaenge = array();
+$result = $db->query(
+  "SELECT a.*, p.titel AS paragraph_titel, p.id AS paragraph_id, p.inhalt AS paragraph_inhalt, p.nummer AS paragraph_nummer " .
+  "FROM `gpb_mini_anhang` a " .
+  "JOIN `gpb_mini_paragraph` p ON p.id = a.paragraphid " .
+  "WHERE p.kursid=" . $kurs->id . " " .
+  "ORDER BY p.nummer ASC, a.hochgeladen_am ASC"
+);
+while ($row = $result->fetch_object()) {
+  $row->verwendet = (strpos($row->paragraph_inhalt, 'id=' . $row->id) !== false)
+    && preg_match('/mini_anhang_download\.php\?id=' . $row->id . '(?!\d)/', $row->paragraph_inhalt);
+  $alleAnhaenge[] = $row;
+}
+$result->free();
+
 // Bearbeiten-Modus für einen bestimmten Paragraph?
 $bearbeitenId = isset($_GET['bearbeiten']) ? (int)$_GET['bearbeiten'] : 0;
 
@@ -267,6 +302,10 @@ if (!empty($fehler)): ?>
 
     <?php if ($bearbeitenId === (int)$p->id): ?>
     <!-- Bearbeitungsformular -->
+    <?php
+      $anhaenge = miniAnhangListeLaden($p->id);
+      $bildAnhaenge = array_values(array_filter($anhaenge, function ($a) { return miniAnhangIstBild($a->dateiname); }));
+    ?>
     <div class="mini-paragraph-bearbeiten-formular">
     <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">
       <input type="hidden" name="aktion" value="speichern" />
@@ -284,6 +323,19 @@ if (!empty($fehler)): ?>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:red&quot;&gt;" data-close="&lt;/span&gt;" style="color:red;">Rot</button>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
           <button type="button" class="mini-format-liste-btn">Liste</button>
+          <?php if (empty($bildAnhaenge)): ?>
+          <select class="mini-bild-auswahl" disabled title="Zuerst ein Bild als Anhang hochladen">
+            <option>(keine Bild-Anhänge)</option>
+          </select>
+          <button type="button" class="mini-bild-einfuegen-btn" disabled>Bild einfügen</button>
+          <?php else: ?>
+          <select class="mini-bild-auswahl">
+            <?php foreach ($bildAnhaenge as $a): ?>
+            <option value="../mini_anhang_download.php?id=<?= $a->id ?>"><?= htmlspecialchars($a->dateiname) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <button type="button" class="mini-bild-einfuegen-btn">Bild einfügen</button>
+          <?php endif; ?>
         </div>
         <!-- Die Vorschau bekommt bewusst KEIN eigenes Gelb/Rahmen-Styling -
              sie soll so aussehen wie der spätere, gespeicherte Paragraph. -->
@@ -298,6 +350,7 @@ if (!empty($fehler)): ?>
         <button type="button" class="mini-vorschau-btn">Vorschau</button>
         <button type="button" class="mini-vorschau-aktualisieren-btn" style="display:none;">Vorschau aktualisieren</button>
         <a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>">Abbrechen</a>
+        
       </div>
     </form>
 
@@ -311,7 +364,6 @@ if (!empty($fehler)): ?>
     <!-- Anhänge (eigenes Formular mit enctype=multipart, unabhängig vom Bearbeiten-Formular) -->
     <div class="mini-anhaenge" style="margin-top:1em; padding-top:0.5em; border-top:1px solid #ddd;">
       <strong>Anhänge:</strong>
-      <?php $anhaenge = miniAnhangListeLaden($p->id); ?>
       <?php if (empty($anhaenge)): ?>
       <div><em>Keine Anhänge.</em></div>
       <?php else: ?>
@@ -333,7 +385,8 @@ if (!empty($fehler)): ?>
       <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>" enctype="multipart/form-data">
         <input type="hidden" name="aktion" value="anhang_hochladen" />
         <input type="hidden" name="pid" value="<?= $p->id ?>" />
-        <input type="file" name="datei" required />
+        <input type="file" name="datei" accept=".jpg,.jpeg,.png,.svg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" required />
+        <small>Max. 15 MB. Erlaubt: Bilder, PDF, Office-Dokumente, TXT, ZIP.</small>
         <button type="submit">Anhang hochladen</button>
       </form>
     </div>
@@ -397,6 +450,53 @@ if (!empty($fehler)): ?>
 <?php endif; ?>
 
 </div>
+
+<!-- Zentrale Anhang-Übersicht: alle Anhänge dieses Kurses auf einen Blick -->
+<details style="margin-top:1.5em;">
+  <summary><strong><?= count($alleAnhaenge) ?> Anhänge in diesem Kurs</strong> (Übersicht aufklappen)</summary>
+  <?php if (empty($alleAnhaenge)): ?>
+  <p><em>Noch keine Anhänge in diesem Kurs.</em></p>
+  <?php else: ?>
+  <table border="1" cellspacing="0" style="border-collapse:collapse; margin-top:0.5em;" class="sehen">
+    <tr>
+      <th>Paragraph</th>
+      <th>Datei</th>
+      <th>Größe</th>
+      <th>Hochgeladen am</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+    <?php foreach ($alleAnhaenge as $a): ?>
+    <tr>
+      <td><a href="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>&amp;bearbeiten=<?= $a->paragraph_id ?>"><?= htmlspecialchars($a->paragraph_titel !== '' ? $a->paragraph_titel : '(ohne Titel)') ?></a></td>
+      <td><?php miniAnhangAnzeigen($a, '../'); ?></td>
+      <td><?= miniAnhangGroesseAnzeigen($a->groesse) ?></td>
+      <td><?= date('d.m.Y H:i', strtotime($a->hochgeladen_am)) ?></td>
+      <td>
+        <?php if (miniAnhangIstBild($a->dateiname)): ?>
+          <?php if ($a->verwendet): ?>
+          <span style="color:green;">✓ im Text verwendet</span>
+          <?php else: ?>
+          <span style="color:#b36b00;">⚠ verwaist (nicht im Text)</span>
+          <?php endif; ?>
+        <?php else: ?>
+          <span style="color:#666;">Datei-Anhang</span>
+        <?php endif; ?>
+      </td>
+      <td>
+        <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>"
+              onsubmit="return confirm('Anhang wirklich löschen?');">
+          <input type="hidden" name="aktion" value="anhang_loeschen" />
+          <input type="hidden" name="anhangid" value="<?= $a->id ?>" />
+          <button type="submit" title="Anhang löschen">🗑️</button>
+        </form>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+  <p><small>"Verwaist" heißt: das Bild ist hochgeladen, wird aber in keinem Paragraph-Text per "Bild einfügen" verwendet. Datei-Anhänge (PDF, Word, ...) können nicht in den Text eingefügt werden und werden deshalb nicht als verwaist markiert.</small></p>
+  <?php endif; ?>
+</details>
 
 <template id="mini-neu-template">
   <div class="mini-neu-formular" style="border:1px dashed #888; margin:0.5em 0; padding:0.5em; background:#f8f8f8;">
@@ -545,6 +645,30 @@ if (!empty($fehler)): ?>
     var textarea = form ? form.querySelector('textarea[name="inhalt"]') : null;
     if (!textarea) return;
     miniFormatToggle(textarea, btn.getAttribute('data-open'), btn.getAttribute('data-close'));
+  });
+
+  // Bild einfügen: fügt an der Cursorposition ein <img>-Tag mit der Adresse
+  // des im <select> daneben gewählten Bild-Anhangs ein.
+  container.addEventListener('click', function (e) {
+    var btn = e.target.closest('.mini-bild-einfuegen-btn');
+    if (!btn || btn.disabled) return;
+    var toolbar = btn.closest('.mini-format-toolbar');
+    var form = btn.closest('form');
+    var auswahl = toolbar ? toolbar.querySelector('.mini-bild-auswahl') : null;
+    var textarea = form ? form.querySelector('textarea[name="inhalt"]') : null;
+    if (!auswahl || !textarea || !auswahl.value) return;
+
+    var url = auswahl.value;
+    var alt = auswahl.options[auswahl.selectedIndex].textContent;
+    var tag = '<img src="' + url + '" alt="' + alt.replace(/"/g, '&quot;') + '" style="max-width:100%;" />';
+
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var value = textarea.value;
+    textarea.value = value.substring(0, start) + tag + value.substring(end);
+    textarea.focus();
+    var neuePos = start + tag.length;
+    textarea.setSelectionRange(neuePos, neuePos);
   });
 
   // Liste/Aufzählung: markierte Zeilen werden in <ul><li>...</li></ul>
