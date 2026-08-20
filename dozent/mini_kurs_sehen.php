@@ -317,12 +317,14 @@ if (!empty($fehler)): ?>
       <div style="margin-top:0.5em;">
         <label><strong>Inhalt (HTML erlaubt):</strong></label>
         <div class="mini-format-toolbar" style="margin-bottom:0.3em;">
+          <span class="mini-format-plain-buttons">
           <button type="button" class="mini-format-btn" data-open="&lt;strong&gt;" data-close="&lt;/strong&gt;"><strong>Fett</strong></button>
           <button type="button" class="mini-format-btn" data-open="&lt;em&gt;" data-close="&lt;/em&gt;"><em>Kursiv</em></button>
           <button type="button" class="mini-format-btn" data-open="&lt;u&gt;" data-close="&lt;/u&gt;"><u>Unterstrichen</u></button>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:red&quot;&gt;" data-close="&lt;/span&gt;" style="color:red;">Rot</button>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
           <button type="button" class="mini-format-liste-btn">Liste</button>
+          </span>
           <?php if (empty($bildAnhaenge)): ?>
           <select class="mini-bild-auswahl" disabled title="Zuerst ein Bild als Anhang hochladen">
             <option>(keine Bild-Anhänge)</option>
@@ -336,13 +338,16 @@ if (!empty($fehler)): ?>
           </select>
           <button type="button" class="mini-bild-einfuegen-btn">Bild einfügen</button>
           <?php endif; ?>
+          <label style="margin-left:1em;" title="Formatierten Editor mit Werkzeugleiste statt reinem HTML-Textfeld verwenden">
+            <input type="checkbox" class="mini-wysiwyg-toggle" data-target="mini-inhalt-<?= $p->id ?>" /> WYSIWYG-Editor
+          </label>
         </div>
         <!-- Die Vorschau bekommt bewusst KEIN eigenes Gelb/Rahmen-Styling -
              sie soll so aussehen wie der spätere, gespeicherte Paragraph. -->
         <div class="mini-vorschau mini-inhalt" style="display:none; margin-bottom:0.3em;">
           <div class="mini-vorschau-inhalt"></div>
         </div>
-        <textarea name="inhalt" rows="10" style="width:100%;"><?= htmlspecialchars($p->inhalt) ?></textarea>
+        <textarea name="inhalt" id="mini-inhalt-<?= $p->id ?>" rows="10" style="width:100%;"><?= htmlspecialchars($p->inhalt) ?></textarea>
       </div>
       <div style="margin-top:0.5em;">
         <button type="submit">Speichern</button>
@@ -537,10 +542,83 @@ if (!empty($fehler)): ?>
   </div>
 </template>
 
+<!-- TinyMCE: "no-api-key"-CDN ist für Tests/Entwicklung gedacht (zeigt eine
+     Konsolenwarnung, funktioniert aber). Für den produktiven Einsatz sollte
+     Emu einen kostenlosen API-Key auf https://www.tiny.cloud/ holen und hier
+     eintragen, sonst irgendwann Rate-Limit-Probleme. -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 (function () {
   var container = document.getElementById('mini-paragraphen');
   if (!container) return;
+
+  // WYSIWYG-Editor (TinyMCE) ein-/ausschaltbar pro Paragraph. Die Wahl wird
+  // in localStorage gemerkt, damit sie sich beim nächsten Bearbeiten (auch
+  // nach einem Reload) nicht jedes Mal neu einstellen muss.
+  var WYSIWYG_PREF_KEY = 'gpbMiniWysiwyg';
+
+  function miniWysiwygAn(textareaId) {
+    if (typeof tinymce === 'undefined' || tinymce.get(textareaId)) return;
+    tinymce.init({
+      selector: '#' + textareaId,
+      menubar: false,
+      statusbar: false,
+      height: 300,
+      plugins: 'lists link',
+      toolbar: 'bold italic underline forecolor | bullist numlist | link | removeformat',
+      setup: function (editor) {
+        // Textarea laufend synchron halten, damit "Vorschau" und das eigene
+        // "Bild einfügen" (au&#223;erhalb von TinyMCE) den aktuellen Stand sehen.
+        editor.on('change input undo redo', function () { editor.save(); });
+      }
+    });
+  }
+
+  function miniWysiwygAus(textareaId) {
+    var editor = typeof tinymce !== 'undefined' ? tinymce.get(textareaId) : null;
+    if (editor) {
+      editor.save();
+      editor.remove();
+    }
+  }
+
+  container.addEventListener('change', function (e) {
+    if (!e.target.classList.contains('mini-wysiwyg-toggle')) return;
+    var textareaId = e.target.getAttribute('data-target');
+    var toolbar = e.target.closest('.mini-format-toolbar');
+    var plainButtons = toolbar ? toolbar.querySelector('.mini-format-plain-buttons') : null;
+
+    if (e.target.checked) {
+      miniWysiwygAn(textareaId);
+      if (plainButtons) plainButtons.style.display = 'none';
+    } else {
+      miniWysiwygAus(textareaId);
+      if (plainButtons) plainButtons.style.display = '';
+    }
+    try { localStorage.setItem(WYSIWYG_PREF_KEY, e.target.checked ? '1' : '0'); } catch (ex) {}
+  });
+
+  // Beim Laden: gespeicherte Präferenz auf alle vorhandenen Toggles anwenden
+  (function () {
+    var pref;
+    try { pref = localStorage.getItem(WYSIWYG_PREF_KEY); } catch (ex) { pref = null; }
+    if (pref !== '1') return;
+    container.querySelectorAll('.mini-wysiwyg-toggle').forEach(function (checkbox) {
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+    });
+  })();
+
+  // Vor dem Absenden: TinyMCE-Inhalt in die eigentliche Textarea übernehmen,
+  // sonst würde das Formular den alten (vor dem Editor-Start gespeicherten)
+  // Stand abschicken.
+  container.addEventListener('submit', function (e) {
+    if (typeof tinymce === 'undefined') return;
+    var textarea = e.target.querySelector('textarea[name="inhalt"]');
+    if (!textarea || !textarea.id) return;
+    var editor = tinymce.get(textarea.id);
+    if (editor) editor.save();
+  }, true);
 
   function schliesseOffeneFormulare() {
     container.querySelectorAll('.mini-neu-formular').forEach(function (el) { el.remove(); });
@@ -586,7 +664,9 @@ if (!empty($fehler)): ?>
     var textarea = form.querySelector('textarea[name="inhalt"]');
     var vorschauInhalt = form.querySelector('.mini-vorschau-inhalt');
     if (!textarea || !vorschauInhalt) return;
-    vorschauInhalt.innerHTML = textarea.value.replace(/\n/g, '<br>');
+    var editor = (typeof tinymce !== 'undefined' && textarea.id) ? tinymce.get(textarea.id) : null;
+    var inhalt = editor ? editor.getContent() : textarea.value.replace(/\n/g, '<br>');
+    vorschauInhalt.innerHTML = inhalt;
   }
 
   container.addEventListener('click', function (e) {
@@ -653,7 +733,8 @@ if (!empty($fehler)): ?>
   });
 
   // Bild einfügen: fügt an der Cursorposition ein <img>-Tag mit der Adresse
-  // des im <select> daneben gewählten Bild-Anhangs ein.
+  // des im <select> daneben gewählten Bild-Anhangs ein. Funktioniert sowohl
+  // im normalen Textfeld als auch (falls aktiv) direkt in TinyMCE.
   container.addEventListener('click', function (e) {
     var btn = e.target.closest('.mini-bild-einfuegen-btn');
     if (!btn || btn.disabled) return;
@@ -666,6 +747,12 @@ if (!empty($fehler)): ?>
     var url = auswahl.value;
     var alt = auswahl.options[auswahl.selectedIndex].textContent;
     var tag = '<img src="' + url + '" alt="' + alt.replace(/"/g, '&quot;') + '" style="max-width:100%;" />';
+
+    var editor = (typeof tinymce !== 'undefined' && textarea.id) ? tinymce.get(textarea.id) : null;
+    if (editor) {
+      editor.insertContent(tag);
+      return;
+    }
 
     var start = textarea.selectionStart;
     var end = textarea.selectionEnd;
