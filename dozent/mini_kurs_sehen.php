@@ -542,11 +542,9 @@ if (!empty($fehler)): ?>
   </div>
 </template>
 
-<!-- TinyMCE: "no-api-key"-CDN ist für Tests/Entwicklung gedacht (zeigt eine
-     Konsolenwarnung, funktioniert aber). Für den produktiven Einsatz sollte
-     Emu einen kostenlosen API-Key auf https://www.tiny.cloud/ holen und hier
-     eintragen, sonst irgendwann Rate-Limit-Probleme. -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- TinyMCE-Cloud mit Emus eigenem kostenlosem API-Key (tiny.cloud), Domain
+     kronisoft.net muss dort unter "Approved Domains" freigeschaltet sein. -->
+<script src="https://cdn.tiny.cloud/1/0fk0rw33hr4o07e80yyzgs9mq8px2ptgaxtdqzpui9azmfz8/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 (function () {
   var container = document.getElementById('mini-paragraphen');
