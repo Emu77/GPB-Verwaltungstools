@@ -593,12 +593,19 @@ function kursPropertysheetKompaktToggle(vollId, kompaktId, btn) {
     <th>Zeugnis-Modul</th>
     <td><?= empty($this->modulid) ? '(keines)' : $this->modultitel.' ('.$this->moduldauer.' Wochen)' ?></td>
   </tr>
+<?php
+  global $miniSeiteVersteckeAktionszeile;
+  if (empty($miniSeiteVersteckeAktionszeile)) {
+?>
   <tr>
     <th></th>
 <?php
     $this->makeBearbeitenTd();
 ?>
   </tr>
+<?php
+  }
+?>
 </table>
 <?php
   }

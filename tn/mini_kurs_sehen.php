@@ -28,6 +28,7 @@ while ($row = $result->fetch_object()) {
 $result->free();
 
 $miniSeiteOhneTodos = true; // auf der Mini-Seite werden die allgemeinen Todos nicht angezeigt
+$miniSeiteVersteckeAktionszeile = true; // "Sehen/Mini/Bewerten"-Zeile ist auf der Mini-Seite selbst selbstreferenziell
 require_once 'TnSeite.php';
 $seite = new TnSeite('Mini-Kurs: ' . $kurs->titel);
 $seite->anfangGenerieren();

@@ -396,13 +396,18 @@ document.getElementById('<?= $vollId ?>').style.display = 'none';
   </tr>
 <?php
     }
+    global $miniSeiteVersteckeAktionszeile;
+    if (empty($miniSeiteVersteckeAktionszeile)) {
 ?>
   <tr id="<?= $tableId ?>_aktionen">
     <th></th>
 <?php
-    $this->makeBearbeitenTd();
+      $this->makeBearbeitenTd();
 ?>
   </tr>
+<?php
+    }
+?>
 </table>
 <?php
   }

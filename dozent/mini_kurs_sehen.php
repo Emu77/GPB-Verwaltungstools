@@ -265,6 +265,7 @@ if (!empty($_SESSION['mini_fehler'])) {
 }
 
 $miniSeiteOhneTodos = true; // auf der Mini-Seite werden die allgemeinen Todos nicht angezeigt
+$miniSeiteVersteckeAktionszeile = true; // "Sehen/Mini/Bewerten"-Zeile ist auf der Mini-Seite selbst selbstreferenziell
 require_once 'DozentSeite.php';
 $seite = new DozentSeite('Mini-Kurs: ' . $kurs->titel);
 $seite->anfangGenerieren();
