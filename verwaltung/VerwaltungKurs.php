@@ -139,7 +139,9 @@ class VerwaltungKurs extends Kurs {
     </td>
 <?php
   }
-  function makeSehen($classname='') {
+  // $kompaktToggle wird hier (noch) nicht unterstützt - Parameter nur der
+  // Signatur-Kompatibilität mit Kurs::makeSehen() wegen, sonst PHP-Warning.
+  function makeSehen($classname='', $kompaktToggle=false) {
     global $moodleisttest;
     if(isset($_SESSION['fehler']['done'])) {
 ?>
