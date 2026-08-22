@@ -278,12 +278,49 @@ class TnKurs extends Kurs {
     </td>
 <?php
   }
-  function makeSehen($classname='') {
+  // $kompaktToggle=true: Button schaltet zwischen voller und kompakter
+  // Tabelle um (wie bei Dozent/Kurs.php), statt einzelne Zeilen zu verstecken.
+  function makeSehen($classname='', $kompaktToggle=false) {
+    if ($kompaktToggle) {
+      $this->makeSehenMitKompaktToggle($classname);
+      return;
+    }
     global $moodleisttest;
     $tableId=$this->neuePropertySheetId();
     $this->makePropertySheetToggleFunktionEinmalig();
 ?>
 <?php $this->makePropertySheetToggleButton($tableId); ?>
+<?php $this->makeSehenVollesTabelle($tableId, $classname); ?>
+<?php
+    $this->makePropertySheetInitialEinklappen($tableId);
+?>
+<br />
+<?php
+  }
+
+  function makeSehenMitKompaktToggle($classname='') {
+    $vollId = $this->neuePropertySheetId();
+    $kompaktId = $this->neuePropertySheetId();
+    $this->makeKompaktToggleFunktionEinmalig(); // von Kurs.php geerbt
+?>
+  <button type="button" class="kurs-ps-toggle-btn" data-eingeklappt="1" onclick="kursPropertysheetKompaktToggle('<?= $vollId ?>','<?= $kompaktId ?>', this)">▼ mehr anzeigen</button>
+<?php
+    $this->makeSehenVollesTabelle($vollId, $classname);
+    $this->makeSehenKompakteTabelle($kompaktId, $classname);
+?>
+<script>
+document.getElementById('<?= $vollId ?>').style.display = 'none';
+</script>
+<br />
+<?php
+  }
+
+  // Volle Tabelle - identisch zur bisherigen TnKurs::makeSehen()-Tabelle,
+  // aber ohne die zeilenweise Klapplogik (die übernimmt hier der Button
+  // außenrum bzw. bei kompaktToggle=false die alte Zeilen-Klapplogik).
+  function makeSehenVollesTabelle($tableId, $classname='') {
+    global $moodleisttest;
+?>
 <table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse;" class="<?= $classname ?>">
   <tr id="<?= $tableId ?>_kw">
     <th>KW</th>
@@ -368,9 +405,54 @@ class TnKurs extends Kurs {
   </tr>
 </table>
 <?php
-    $this->makePropertySheetInitialEinklappen($tableId);
+  }
+
+  // Kompakte Tabelle: KW/Beginn/Ende -> "Kurszeitraum", Ort+Raum
+  // zusammengefasst, Klasse und Dozent nebeneinander. Die "Note"-Zeile
+  // bleibt bewusst nur in der vollen Tabelle (kompakt = nur das Nötigste).
+  function makeSehenKompakteTabelle($tableId, $classname='') {
 ?>
-<br />
+<table id="<?= $tableId ?>" border="1" cellspacing="0" style="border-collapse:collapse; display:none;" class="<?= $classname ?>">
+  <tr>
+    <th>Kurszeitraum</th>
+    <td>
+      <div><?= date('d.m.Y',$this->von) ?> - <?= date('d.m.Y',$this->bis) ?></div>
+<?php
+    if(count($this->kw)<=3) {
+      foreach($this->kw as $kw) {
+?>
+      <div>KW <?= substr($kw,5) ?></div>
+<?php
+      }
+    } else {
+?>
+      <div>KW <?= substr($this->kw[0],5) ?> - <?= substr($this->kw[count($this->kw)-1],5) ?> (<?= count($this->kw) ?> Wo)</div>
+<?php
+    }
+?>
+    </td>
+  </tr>
+  <tr>
+    <th>Titel</th>
+<?php
+    $this->makeTitelTd();
+?>
+  </tr>
+  <tr>
+    <th>Ort/Raum</th>
+    <td><?= $this->ort ?><?= (!empty($this->ort) && !empty($this->raum)) ? ' / ' : '' ?><?= $this->raum ?></td>
+  </tr>
+  <tr>
+    <th>Klasse</th>
+<?php
+    $this->makeKlassenTd();
+?>
+    <th>Dozent</th>
+<?php
+    $this->makeDozentenTd();
+?>
+  </tr>
+</table>
 <?php
   }
 }
