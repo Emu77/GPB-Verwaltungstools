@@ -488,7 +488,7 @@ document.querySelectorAll('#<?= $tableId ?> tr.kurs-ps-mehr').forEach(function (
     $kompaktId = $this->neuePropertySheetId();
     $this->makeKompaktToggleFunktionEinmalig();
 ?>
-  <button type="button" class="kurs-ps-toggle-btn" data-eingeklappt="1" onclick="kursPropertysheetKompaktToggle('<?= $vollId ?>','<?= $kompaktId ?>', this)">▲ weniger anzeigen</button>
+  <button type="button" class="kurs-ps-toggle-btn" data-eingeklappt="1" onclick="kursPropertysheetKompaktToggle('<?= $vollId ?>','<?= $kompaktId ?>', this)">▼ mehr anzeigen</button>
 <?php
     $this->makeSehenVollesTabelle($vollId, $classname);
     $this->makeSehenKompakteTabelle($kompaktId, $classname);
@@ -511,7 +511,7 @@ function kursPropertysheetKompaktToggle(vollId, kompaktId, btn) {
   document.getElementById(vollId).style.display = eingeklappt ? '' : 'none';
   document.getElementById(kompaktId).style.display = eingeklappt ? 'none' : '';
   btn.setAttribute('data-eingeklappt', eingeklappt ? '0' : '1');
-  btn.textContent = eingeklappt ? '▼ mehr anzeigen' : '▲ weniger anzeigen';
+  btn.textContent = eingeklappt ? '▲ weniger anzeigen' : '▼ mehr anzeigen';
 }
 </script>
 <?php
