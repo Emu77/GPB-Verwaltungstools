@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-08-22
+
+### Mini (Todos & PropertySheet)
+- Auf der Mini-Kurs-Seite selbst (TN und Dozent) wird die allgemeine Todo-Box nicht mehr angezeigt (`$miniSeiteOhneTodos`); auf allen anderen Seiten ist sie jetzt standardmäßig aufgeklappt (`<details open>`) statt eingeklappt.
+- "Weniger anzeigen"-Button auf der Mini-Seite schaltet jetzt zwischen zwei komplett generierten Tabellen um (`Kurs::makeSehenMitKompaktToggle()`/`makeSehenVollesTabelle()`/`makeSehenKompakteTabelle()`), statt nur einzelne Zeilen zu verstecken: Kompakt fasst KW/Beginn/Ende zu "Kurszeitraum" zusammen, Ort+Raum in eine Zeile, Klassen und Dozenten stehen nebeneinander. Umgesetzt für Dozent (`Kurs.php`) und TN (eigene Kopie in `tn/TnKurs.php`, da TN dort `makeSehen()` komplett überschreibt).
+- Selbstreferenzielle "Sehen/Mini/Bewerten"-Aktionszeile wird in der vollen Tabelle unterdrückt, wenn man sich bereits auf der Mini-Seite selbst befindet (`$miniSeiteVersteckeAktionszeile`).
+- Bugfixes am Kompakt-Toggle: Beschriftung "mehr"/"weniger anzeigen" war anfangs vertauscht; kompakte Tabelle war durch ein eigenes `display:none` plus das Verstecken der vollen Tabelle anfangs komplett unsichtbar (musste explizit per Script wieder eingeblendet werden).
+- `VerwaltungKurs::makeSehen()`/`LeitungKurs::makeSehen()`-Signatur an das neue `Kurs::makeSehen($classname, $kompaktToggle)` angepasst (PHP-Warning wegen inkompatibler Methoden-Signatur behoben).
+
+### Mini (Anhänge & Bilder)
+- Bild-Anhänge (jpg/jpeg/png/svg/gif/webp) werden jetzt als kleines Vorschaubild angezeigt statt als reiner Download-Link; Klick vergrößert/verkleinert per JavaScript (`MiniAnhang.php: miniAnhangAnzeigen()`, CSS in den jeweiligen rollenspezifischen `styles.css`). Umgesetzt für TN, Dozent und Verwaltung.
+- `mini_anhang_download.php` liefert Bilder jetzt mit korrektem `Content-Type` und `Content-Disposition: inline` statt als erzwungenen Download aus (Voraussetzung für die `<img>`-Vorschau).
+- Neuer Button "Bild einfügen" im Paragraph-Formular: `<select>` mit allen Bild-Anhängen des Paragraphen, fügt beim Klick ein `<img>`-Tag an der Cursorposition ein (funktioniert sowohl im normalen Textfeld als auch mit aktivem WYSIWYG-Editor).
+- Upload-Validierung: Dateityp-Whitelist (Bilder + PDF/Office/TXT/ZIP) und 15-MB-Größenlimit mit klarer Fehlermeldung statt nur Eintrag im `php_error_log`.
+- Neue zentrale Anhang-Übersicht pro Kurs (aufklappbar, Text wechselt dynamisch zwischen "aufklappen"/"zuklappen" wie bei den Todos): listet alle Anhänge aller Paragraphen mit Paragraph-Link, Vorschau, Größe, Datum und Lösch-Button.
+- Verwendet/verwaist-Erkennung für Bild-Anhänge: prüft per Regex, ob die Download-URL des Bildes im Paragraph-Text vorkommt (also per "Bild einfügen" tatsächlich verwendet wurde). Datei-Anhänge (PDF, Office, …) werden nicht als verwaist markiert, da sie sich nicht in den Text einfügen lassen.
+- Paragraph-Löschen entfernt jetzt auch alle zugehörigen Anhänge (Datei + DB-Zeile), nicht nur den Paragraph selbst; Lösch-Button steht jetzt sowohl in der Ansicht als auch direkt im Bearbeiten-Formular.
+
+### Mini (Editor)
+- Bearbeiten-Formular hat jetzt einen hellgelben Hintergrund, die Eingabefelder selbst bleiben weiß (`.mini-paragraph-bearbeiten-formular`).
+- Vorschau nutzt jetzt dieselbe CSS-Klasse (`.mini-inhalt`) wie die spätere echte Anzeige (kein eigenes Gelb/Rahmen-Styling mehr) und hat einen separaten "Vorschau aktualisieren"-Button neben "Vorschau ausblenden".
+- Erfolgsmeldungen laufen jetzt über die Session statt über URL-Parameter und werden nur noch angezeigt, wenn das Ergebnis nicht ohnehin sofort sichtbar ist (z. B. "Paragraph gespeichert" bei "Speichern und weiter bearbeiten"; kein Hinweis mehr bei Hinzufügen/Löschen/Hoch-/Runterladen, da das Ergebnis direkt auf der Seite zu sehen ist).
+- WYSIWYG-Editor (TinyMCE) pro Paragraph ein-/ausschaltbar über eine Checkbox; Wahl wird im Browser gemerkt (`localStorage`). Eigene Fett/Kursiv/…-Buttons werden bei aktivem TinyMCE ausgeblendet, "Bild einfügen" und Vorschau funktionieren in beiden Modi. Eingebunden über die tiny.cloud-CDN mit Emus eigenem kostenlosem API-Key (`kronisoft.net` unter "Approved Domains" freigeschaltet).
+
+### Datenbank
+- `gpb_mini_paragraph.id` hatte kein `AUTO_INCREMENT`/`PRIMARY KEY` und vergab bei jedem Insert `id=0`, was zu Dopplungen und falschem Löschen führte; Spalte nachträglich korrigiert (`ALTER TABLE gpb_mini_paragraph MODIFY id INT(11) NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY (id)`), betroffene Testzeilen bereinigt.
+
 ## 2026-07-23
 
 ### TODO-Liste (Teilnehmer & Dozent)
