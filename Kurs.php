@@ -495,6 +495,7 @@ document.querySelectorAll('#<?= $tableId ?> tr.kurs-ps-mehr').forEach(function (
 ?>
 <script>
 document.getElementById('<?= $vollId ?>').style.display = 'none';
+document.getElementById('<?= $kompaktId ?>').style.display = '';
 </script>
 <br />
 <?php

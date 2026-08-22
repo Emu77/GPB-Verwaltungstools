@@ -310,6 +310,7 @@ class TnKurs extends Kurs {
 ?>
 <script>
 document.getElementById('<?= $vollId ?>').style.display = 'none';
+document.getElementById('<?= $kompaktId ?>').style.display = '';
 </script>
 <br />
 <?php
