@@ -1,0 +1,14 @@
+gpb.sql
+gpb_bu*.sql
+db.local.php
+db.localprod.php
+db.prod.php
+db.test.php
+db.verwaltungtest.php
+beratung/signaturbilder/
+beratung/temp/
+db.php
+mini_uploads/dozent_*
+gpb.sql.zip
+*.sql
+.sql
