@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-08-25
+
+### Mini: Custom-WYSIWYG-Editor – Live-Integration
+- Editor produktiv in `dozent/mini_kurs_sehen.php` eingebunden: TinyMCE-CDN-Script entfernt, stattdessen `mini_wysiwyg.js`/`mini_wysiwyg.css` (Objekt `MiniWysiwyg`).
+- `miniWysiwygAn()`/`miniWysiwygAus()`, Submit-Sync, Vorschau-Befüllung und "Bild einfügen" auf `MiniWysiwyg.init()`/`.destroy()`/`.getContent()`/`.insertContent()` umgestellt statt `tinymce.init()`/`.get()`/`.remove()`; alter Plain-Text-Toggle (ohne WYSIWYG) unverändert funktionsfähig.
+- Live auf kronisoft.net getestet: Formatierung, Bild einfügen, Vorschau, Speichern laufen fehlerfrei.
+
+### Sicherheit
+- `secret/`-Ordner (u. a. Klartext-Passwort für den `gpbintern`-Basic-Auth-Account in `intern_pwd.php`/`.internpass`) war rund 2 Monate lang im öffentlichen GitHub-Repo einsehbar. Ordner lokal gelöscht, per `git filter-repo --path secret/ --invert-paths` aus der kompletten Git-Historie entfernt und per `git push --force` überschrieben. `.gitignore` um `secret/` ergänzt.
+- Zusätzlich `.gitignore` um `*_alt`/`*_alt.*` ergänzt (lokale Backup-Dateien wie `mini_kurs_sehen.php_alt` sollen nicht versioniert werden).
+
+## 2026-08-24
+
+### Mini: Custom-WYSIWYG-Editor (IHK-Projektarbeit, Phase 2 – Editor-Grundgerüst)
+- Neues eigenständiges Editor-Modul als Ersatz für TinyMCE (siehe `docs/Projektantrag_gpb_WYSIWYG_Editor.pdf`, `docs/Umsetzungs_Zeitplan_WYSIWYG_Editor.pdf`): HTML-Grundgerüst (contenteditable-Fläche + Toolbar-Markup), Selection-/Range-Zugriff, Formatierungsfunktionen Fett/Kursiv/Unterstrichen/Farbe inkl. Toggle-Logik.
+- Kein `document.execCommand()` (deprecated) – Formatierung läuft über eigene Range-API-Logik, analog zum Prinzip der bestehenden Plain-Text-Toolbar (`miniFormatToggle()`).
+- Mehrere Bugfixes während der Standalone-Tests:
+  - Leere Tag-Hüllen (`<strong></strong>`) nach einem Toggle bereinigt (`cleanupEmptyInlineTags()`).
+  - Doppelt verschachtelte identische Tags zusammengeführt (`mergeRedundantNesting()`).
+  - Selektionsverlust beim allerersten Formatierungs-Klick behoben: `editor.focus()` setzte die gerade getroffene Markierung zurück, solange die Editor-Fläche noch nie echten Fokus hatte; Selektion wird jetzt vorher gesichert und danach bei Bedarf wiederhergestellt.
+  - Farb-Buttons ersetzen jetzt die bestehende Farbe einer Markierung, statt eine weitere `<span>` zu verschachteln (Toggle aus bei erneutem Klick auf dieselbe Farbe).
+- Alle Fixes mit automatisierten jsdom-Tests abgesichert, nicht nur manuell im Browser geprüft.
+
 ## 2026-08-22
 
 ### Mini (Todos & PropertySheet)
