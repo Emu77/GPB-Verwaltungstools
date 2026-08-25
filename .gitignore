@@ -16,3 +16,4 @@ gpb.sql.zip
 # Lokale Backup-/Alt-Dateien (z.B. mini_kurs_sehen.php_alt) - bleiben nur lokal
 *_alt
 *_alt.*
+secret/
