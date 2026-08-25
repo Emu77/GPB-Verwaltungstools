@@ -1,0 +1,49 @@
+.mini-cwysiwyg {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-bottom: 0.3em;
+}
+
+.mini-cwysiwyg-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  padding: 0.25em;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ccc;
+}
+
+.mini-cwysiwyg-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0.2em 0.5em;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 0.95em;
+}
+
+.mini-cwysiwyg-btn:hover {
+  background: #e0e0e0;
+  border-color: #bbb;
+}
+
+.mini-cwysiwyg-color {
+  font-weight: bold;
+}
+
+.mini-cwysiwyg-sep {
+  width: 1px;
+  align-self: stretch;
+  background: #ccc;
+  margin: 0 0.25em;
+}
+
+.mini-cwysiwyg-editor {
+  min-height: 200px;
+  padding: 0.5em;
+  outline: none;
+}
+
+.mini-cwysiwyg-editor:focus {
+  background: #fffef8;
+}

@@ -543,42 +543,30 @@ if (!empty($fehler)): ?>
   </div>
 </template>
 
-<!-- TinyMCE-Cloud mit Emus eigenem kostenlosem API-Key (tiny.cloud), Domain
-     kronisoft.net muss dort unter "Approved Domains" freigeschaltet sein. -->
-<script src="https://cdn.tiny.cloud/1/0fk0rw33hr4o07e80yyzgs9mq8px2ptgaxtdqzpui9azmfz8/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- Custom-WYSIWYG-Editor (Ersatz für TinyMCE, IHK-Projektarbeit Emu),
+     siehe docs/Projektantrag_gpb_WYSIWYG_Editor.pdf -->
+<link rel="stylesheet" href="mini_wysiwyg.css" />
+<script src="mini_wysiwyg.js"></script>
 <script>
 (function () {
   var container = document.getElementById('mini-paragraphen');
   if (!container) return;
 
-  // WYSIWYG-Editor (TinyMCE) ein-/ausschaltbar pro Paragraph. Die Wahl wird
+  // Custom-WYSIWYG-Editor ein-/ausschaltbar pro Paragraph. Die Wahl wird
   // in localStorage gemerkt, damit sie sich beim nächsten Bearbeiten (auch
   // nach einem Reload) nicht jedes Mal neu einstellen muss.
   var WYSIWYG_PREF_KEY = 'gpbMiniWysiwyg';
 
   function miniWysiwygAn(textareaId) {
-    if (typeof tinymce === 'undefined' || tinymce.get(textareaId)) return;
-    tinymce.init({
-      selector: '#' + textareaId,
-      menubar: false,
-      statusbar: false,
-      height: 300,
-      plugins: 'lists link',
-      toolbar: 'bold italic underline forecolor | bullist numlist | link | removeformat',
-      setup: function (editor) {
-        // Textarea laufend synchron halten, damit "Vorschau" und das eigene
-        // "Bild einfügen" (au&#223;erhalb von TinyMCE) den aktuellen Stand sehen.
-        editor.on('change input undo redo', function () { editor.save(); });
-      }
-    });
+    if (typeof MiniWysiwyg === 'undefined') return;
+    var textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    MiniWysiwyg.init(textarea);
   }
 
   function miniWysiwygAus(textareaId) {
-    var editor = typeof tinymce !== 'undefined' ? tinymce.get(textareaId) : null;
-    if (editor) {
-      editor.save();
-      editor.remove();
-    }
+    if (typeof MiniWysiwyg === 'undefined') return;
+    MiniWysiwyg.destroy(textareaId);
   }
 
   container.addEventListener('change', function (e) {
@@ -608,15 +596,16 @@ if (!empty($fehler)): ?>
     });
   })();
 
-  // Vor dem Absenden: TinyMCE-Inhalt in die eigentliche Textarea übernehmen,
+  // Vor dem Absenden: Editor-Inhalt in die eigentliche Textarea übernehmen,
   // sonst würde das Formular den alten (vor dem Editor-Start gespeicherten)
-  // Stand abschicken.
+  // Stand abschicken. MiniWysiwyg hält die Textarea zwar schon laufend bei
+  // jedem Input synchron, das hier ist die zusätzliche Absicherung.
   container.addEventListener('submit', function (e) {
-    if (typeof tinymce === 'undefined') return;
+    if (typeof MiniWysiwyg === 'undefined') return;
     var textarea = e.target.querySelector('textarea[name="inhalt"]');
     if (!textarea || !textarea.id) return;
-    var editor = tinymce.get(textarea.id);
-    if (editor) editor.save();
+    var inhalt = MiniWysiwyg.getContent(textarea.id);
+    if (inhalt !== null) textarea.value = inhalt;
   }, true);
 
   function schliesseOffeneFormulare() {
@@ -663,8 +652,8 @@ if (!empty($fehler)): ?>
     var textarea = form.querySelector('textarea[name="inhalt"]');
     var vorschauInhalt = form.querySelector('.mini-vorschau-inhalt');
     if (!textarea || !vorschauInhalt) return;
-    var editor = (typeof tinymce !== 'undefined' && textarea.id) ? tinymce.get(textarea.id) : null;
-    var inhalt = editor ? editor.getContent() : textarea.value.replace(/\n/g, '<br>');
+    var editorInhalt = (typeof MiniWysiwyg !== 'undefined' && textarea.id) ? MiniWysiwyg.getContent(textarea.id) : null;
+    var inhalt = editorInhalt !== null ? editorInhalt : textarea.value.replace(/\n/g, '<br>');
     vorschauInhalt.innerHTML = inhalt;
   }
 
@@ -733,7 +722,7 @@ if (!empty($fehler)): ?>
 
   // Bild einfügen: fügt an der Cursorposition ein <img>-Tag mit der Adresse
   // des im <select> daneben gewählten Bild-Anhangs ein. Funktioniert sowohl
-  // im normalen Textfeld als auch (falls aktiv) direkt in TinyMCE.
+  // im normalen Textfeld als auch (falls aktiv) direkt im Custom-Editor.
   container.addEventListener('click', function (e) {
     var btn = e.target.closest('.mini-bild-einfuegen-btn');
     if (!btn || btn.disabled) return;
@@ -747,9 +736,9 @@ if (!empty($fehler)): ?>
     var alt = auswahl.options[auswahl.selectedIndex].textContent;
     var tag = '<img src="' + url + '" alt="' + alt.replace(/"/g, '&quot;') + '" style="max-width:100%;" />';
 
-    var editor = (typeof tinymce !== 'undefined' && textarea.id) ? tinymce.get(textarea.id) : null;
-    if (editor) {
-      editor.insertContent(tag);
+    var editorAktiv = typeof MiniWysiwyg !== 'undefined' && textarea.id && MiniWysiwyg.getContent(textarea.id) !== null;
+    if (editorAktiv) {
+      MiniWysiwyg.insertContent(textarea.id, tag);
       return;
     }
 
