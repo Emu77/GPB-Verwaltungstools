@@ -97,3 +97,38 @@ h1 {
 .feedback:after {
   content:'”';
 }
+/* Mini-Kurs: Anhänge als Bild-Vorschau */
+.mini-anhang-bild-wrapper {
+  display:inline-block;
+  vertical-align:top;
+  margin:0.3em 0.5em 0.3em 0;
+  text-align:center;
+}
+.mini-anhang-bild {
+  display:block;
+  max-width:80px;
+  max-height:80px;
+  border:1px solid #ccc;
+  cursor:zoom-in;
+}
+.mini-anhang-bild.mini-bild-gross {
+  max-width:500px;
+  max-height:500px;
+  cursor:zoom-out;
+}
+.mini-anhang-dateiname {
+  font-size:11px;
+  max-width:120px;
+}
+
+/* Mini-Kurs: Bearbeiten-Formular eines Paragraphen (hellgelb), Eingabefelder
+   selbst bleiben weiß */
+.mini-paragraph-bearbeiten-formular {
+  background-color:#fffde0;
+  padding:0.5em;
+  margin:-0.5em -0.5em 0.5em -0.5em;
+}
+.mini-paragraph-bearbeiten-formular input[type="text"],
+.mini-paragraph-bearbeiten-formular textarea {
+  background-color:#fff;
+}

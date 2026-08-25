@@ -1,0 +1,277 @@
+diff --git a/Kurs.php b/Kurs.php
+index 97a1a8a..af88f88 100644
+--- a/Kurs.php
++++ b/Kurs.php
+@@ -202,8 +202,7 @@ class Kurs {
+     }
+ ?>
+     <th>Dozenten</th>
+-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+-    <th>Mini</th>
++    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
+     <th></th>
+   </tr>
+ <?php
+@@ -235,8 +234,7 @@ class Kurs {
+       $this->makeAnzahlTNTd(true);
+     }
+     $this->makeDozentenTd();
+-    $this->makeMoodleTd();
+-    $this->makeMiniTd();
++    $this->makeMoodleMiniTd();
+     $this->makeBearbeitenTd();
+ ?>
+   </tr>
+@@ -306,22 +304,30 @@ class Kurs {
+     </td>
+ <?php
+   }
+-  function makeMoodleTd($extras=null) {
+-    global $moodleisttest;
++  function makeMoodleInhalt() {
+     if($this->moodleid>0) {
+       global $moodleurl;
+ ?>
+-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>><a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a></td>
++      <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
+ <?php
+     } else {
+ ?>
+-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>(in Planung)</td>
++      (in Planung)
+ <?php
+     }
+   }
+-  function makeMiniTd($extras=null) {
++  function makeMiniInhalt() {
++    // Basisklasse: kein Mini vorhanden, Unterklassen überschreiben dies bei Bedarf
++  }
++  function makeMoodleMiniTd($extras=null) {
++    global $moodleisttest;
++?>
++    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>
++<?php
++    $this->makeMoodleInhalt();
++    $this->makeMiniInhalt();
+ ?>
+-    <td <?= empty($extras) ? '' : $extras ?>></td>
++    </td>
+ <?php
+   }
+   function makeBearbeitenTd() {
+@@ -394,15 +400,9 @@ class Kurs {
+ ?>
+   </tr>
+   <tr>
+-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+-<?php
+-    $this->makeMoodleTd();
+-?>
+-  </tr>
+-  <tr>
+-    <th>Mini</th>
++    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
+ <?php
+-    $this->makeMiniTd();
++    $this->makeMoodleMiniTd();
+ ?>
+   </tr>
+   <tr>
+diff --git a/dozent/DozentKurs.php b/dozent/DozentKurs.php
+index 042dcd4..dcd1141 100644
+--- a/dozent/DozentKurs.php
++++ b/dozent/DozentKurs.php
+@@ -56,18 +56,12 @@ class DozentKurs extends Kurs {
+     </td>
+ <?php
+   }
+-  function makeMiniTd($extras=null) {
+-?>
+-    <td <?= empty($extras) ? '' : $extras ?>>
+-<?php
++  function makeMiniInhalt() {
+     if($this->mini) {
+ ?>
+       <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini</a>
+ <?php
+     }
+-?>
+-    </td>
+-<?php
+   }
+     function makeBearbeitenTd() {
+     global $ich;
+diff --git a/leitung/LeitungKurs.php b/leitung/LeitungKurs.php
+index d4b38fa..4f49c08 100644
+--- a/leitung/LeitungKurs.php
++++ b/leitung/LeitungKurs.php
+@@ -102,26 +102,19 @@ class LeitungKurs extends Kurs {
+     </td>
+ <?php
+   }
+-  function makeMoodleTd($extras=null) {
+-    global $moodleisttest;
+-?>
+-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>
+-<?php
++  function makeMoodleInhalt() {
+     if($this->moodleid>0) {
+       global $moodleurl;
+ ?>
+-    <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
++      <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
+ <?php
+     }
+     if(isset($_SESSION['fehler']['moodleid'])) {
+ ?>
+-    <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
++      <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
+ <?php
+       unset($_SESSION['fehler']['moodleid']);
+     }
+-?>
+-    </td>
+-<?php
+   }
+   function makeBearbeitenTd() {
+ ?>
+@@ -270,9 +263,9 @@ class LeitungKurs extends Kurs {
+   <tr>
+     <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+ <?php
+-    $this->makeMoodleTd();
++    $this->makeMoodleMiniTd();
+ ?>
+-  </tr>  
++  </tr>
+   <tr>
+     <th></th>
+ <?php
+diff --git a/tn/TnKurs.php b/tn/TnKurs.php
+index d28e0de..6e03c19 100644
+--- a/tn/TnKurs.php
++++ b/tn/TnKurs.php
+@@ -102,7 +102,7 @@ class TnKurs extends Kurs {
+     <th>Raum</th>
+     <th>Klasse</th>
+     <th>Dozent</th>
+-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
++    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
+     <th>Note</th>
+     <th></th>
+   </tr>
+@@ -117,7 +117,7 @@ class TnKurs extends Kurs {
+     $this->makeLocationTds();
+     $this->makeKlassenTd();
+     $this->makeDozentenTd();
+-    $this->makeMoodleTd();
++    $this->makeMoodleMiniTd();
+     $this->makeNoteTd();
+     $this->makeBearbeitenTd();
+ ?>
+@@ -245,18 +245,12 @@ class TnKurs extends Kurs {
+ <?php
+     }
+   }
+-  function makeMiniTd($extras=null) {
+-?>
+-    <td <?= empty($extras) ? '' : $extras ?>>
+-<?php
++  function makeMiniInhalt() {
+     if($this->mini && $this->vonMir) {
+ ?>
+       <a href="mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini-Kurs</a>
+ <?php
+     }
+-?>
+-    </td>
+-<?php
+   }
+     function makeBearbeitenTd() {
+ ?>
+@@ -342,15 +336,9 @@ class TnKurs extends Kurs {
+ ?>
+   </tr>
+   <tr>
+-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+-<?php
+-    $this->makeMoodleTd();
+-?>
+-  </tr>
+-  <tr>
+-    <th>Mini</th>
++    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
+ <?php
+-    $this->makeMiniTd();
++    $this->makeMoodleMiniTd();
+ ?>
+   </tr>
+   <tr>
+diff --git a/verwaltung/VerwaltungKurs.php b/verwaltung/VerwaltungKurs.php
+index da172d7..01b63c3 100644
+--- a/verwaltung/VerwaltungKurs.php
++++ b/verwaltung/VerwaltungKurs.php
+@@ -70,31 +70,21 @@ class VerwaltungKurs extends Kurs {
+     </td>
+ <?php
+   }
+-  function makeMoodleTd($extras=null) {
+-    global $moodleisttest;
+-?>
+-    <td class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>" <?= empty($extras) ? '' : $extras ?>>
+-<?php
++  function makeMoodleInhalt() {
+     if($this->moodleid>0) {
+       global $moodleurl;
+ ?>
+-    <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
++      <a href="<?= $moodleurl ?>course/view.php?id=<?= $this->moodleid ?>" target="moodle">Moodle-ID=<?= $this->moodleid ?></a>
+ <?php
+     }
+     if(isset($_SESSION['fehler']['moodleid'])) {
+ ?>
+-    <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
++      <div class="fehler"><?= $_SESSION['fehler']['moodleid'] ?></div>
+ <?php
+       unset($_SESSION['fehler']['moodleid']);
+     }
+-?>
+-    </td>
+-<?php
+   }
+-  function makeMiniTd($extras=null) {
+-?>
+-    <td <?= empty($extras) ? '' : $extras ?>>
+-<?php
++  function makeMiniInhalt() {
+     if($this->mini) {
+ ?>
+       <a href="../verwaltung/mini_kurs_sehen.php?kursid=<?= $this->id ?>">Mini-Kurs ansehen</a>
+@@ -114,9 +104,6 @@ class VerwaltungKurs extends Kurs {
+       </form>
+ <?php
+     }
+-?>
+-    </td>
+-<?php
+   }
+     function makeBearbeitenTd() {
+     global $ich;
+@@ -289,15 +276,9 @@ class VerwaltungKurs extends Kurs {
+     }
+ ?>
+   <tr>
+-    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle</th>
+-<?php
+-    $this->makeMoodleTd();
+-?>
+-  </tr>  
+-  <tr>
+-    <th>Mini</th>
++    <th class="<?= $moodleisttest ? 'testmoodle' : 'moodle' ?>">Moodle / Mini</th>
+ <?php
+-    $this->makeMiniTd();
++    $this->makeMoodleMiniTd();
+ ?>
+   </tr>
+   <tr>

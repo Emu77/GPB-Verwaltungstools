@@ -1,0 +1,91 @@
+diff --git a/dozent/raumplan.php b/dozent/raumplan.php
+index 6af8767..ef0f78d 100644
+--- a/dozent/raumplan.php
++++ b/dozent/raumplan.php
+@@ -104,7 +104,7 @@ if(!empty($kurseByKlasseid) || !empty($ferienByKlasseid)) {
+     <td><?= $k->titel ?></td>
+ <?php
+       $k->makeDozentenTd();
+-      $k->makeMoodleTd();
++      $k->makeMoodleMiniTd();
+       $k->makeBearbeitenTd();
+ ?>
+   </tr>
+diff --git a/index.php b/index.php
+index 4072a37..ca1f739 100644
+--- a/index.php
++++ b/index.php
+@@ -143,7 +143,7 @@ if(!empty($kurseByKlasseid) || !empty($ferienByKlasseid)) {
+     <td><?= $k->raum ?> (<?= $k->ort ?>)</td>
+     <td><?= $k->titel ?></td>
+ <?php
+-      $k->makeMoodleTd();
++      $k->makeMoodleMiniTd();
+       $k->makeDozentenTd();
+ ?>
+   </tr>
+diff --git a/tn/noten.php b/tn/noten.php
+index 370a91a..684e57a 100644
+--- a/tn/noten.php
++++ b/tn/noten.php
+@@ -47,7 +47,7 @@ foreach($kurse->alle as $kurs) {
+       <?= empty($kurs->modultitel) ? '' : $kurs->modultitel.' ('.$kurs->moduldauer.' Wochen)' ?>
+     </th>
+ <?php
+-  $kurs->makeMoodleTd();
++  $kurs->makeMoodleMiniTd();
+ ?>
+     <td><?= date('d.m.Y',$kurs->von) ?> - <?= date('d.m.Y',$kurs->bis) ?></td>
+ <?php
+diff --git a/tn/raumplan.php b/tn/raumplan.php
+index a46330d..873c093 100644
+--- a/tn/raumplan.php
++++ b/tn/raumplan.php
+@@ -102,7 +102,7 @@ if(!empty($kurseByKlasseid) || !empty($ferienByKlasseid)) {
+     <td><?= $k->titel ?></td>
+ <?php
+       $k->makeDozentenTd();
+-      $k->makeMoodleTd();
++      $k->makeMoodleMiniTd();
+ ?>
+   </tr>
+ <?php
+diff --git a/verwaltung/klasse_sollplanvergleich.php b/verwaltung/klasse_sollplanvergleich.php
+index a690bb5..49c29e3 100644
+--- a/verwaltung/klasse_sollplanvergleich.php
++++ b/verwaltung/klasse_sollplanvergleich.php
+@@ -123,7 +123,7 @@ foreach($module as $modul) {
+       $kurs->makeKlassenTd();
+       $kurs->makeAnzahlTNTd(true);
+       $kurs->makeDozentenTd();
+-      $kurs->makeMoodleTd();
++      $kurs->makeMoodleMiniTd();
+       $kurs->makeBearbeitenTd();
+ ?>
+   </tr>
+diff --git a/verwaltung/nachschreiber.php b/verwaltung/nachschreiber.php
+index 7588c1d..97608bb 100644
+--- a/verwaltung/nachschreiber.php
++++ b/verwaltung/nachschreiber.php
+@@ -115,7 +115,7 @@ function makeTr($n) {
+   <tr>
+     <td><a href="kurs_il_noten.php?kursid=<?= $kurs->id ?>"><?= $kurs->titel ?></a><br /><?= $kurs->ort ?></td>
+ <?php
+-      $kurs->makeMoodleTd();
++      $kurs->makeMoodleMiniTd();
+       if(empty($kurs->nachklausur)) {
+         if($kurs->moodleid<=0) {
+ ?>
+diff --git a/verwaltung/raumplan.php b/verwaltung/raumplan.php
+index 85a03f8..3c88b34 100644
+--- a/verwaltung/raumplan.php
++++ b/verwaltung/raumplan.php
+@@ -107,7 +107,7 @@ if(!empty($kurseByKlasseid) || !empty($ferienByKlasseid)) {
+     <td><?= $k->titel ?> (<?= $k->anzahlTN ?> TN)</td>
+ <?php
+       $k->makeDozentenTd();
+-      $k->makeMoodleTd();
++      $k->makeMoodleMiniTd();
+       $k->makeBearbeitenTd();
+ ?>
+   </tr>

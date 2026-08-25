@@ -1,0 +1,48 @@
+diff --git a/dozent/mini_kurs_sehen.php b/dozent/mini_kurs_sehen.php
+index 3b785c5..533ff44 100644
+--- a/dozent/mini_kurs_sehen.php
++++ b/dozent/mini_kurs_sehen.php
+@@ -57,7 +57,7 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'loeschen' && isset($_POST['
+ if (isset($_POST['aktion']) && $_POST['aktion'] === 'speichern' && isset($_POST['pid'])) {
+   $pid = (int)$_POST['pid'];
+   $titel = $_POST['titel'] ?? '';
+-  $inhalt = $_POST['inhalt'] ?? '';
++  $inhalt = isset($_POST['inhalt']) ? str_replace("\r", "\n", str_replace("\r\n", "\n", $_POST['inhalt'])) : '';
+   $stmt = $db->prepare("UPDATE `gpb_mini_paragraph` SET titel=?, inhalt=? WHERE id=? AND kursid=?");
+   $stmt->bind_param('ssii', $titel, $inhalt, $pid, $kurs->id);
+   $stmt->execute();
+@@ -178,7 +178,7 @@ if (!empty($fehler)): ?>
+         </form>
+       </span>
+     </div>
+-    <div class="mini-inhalt" style="margin-top:0.5em;"><?= $p->inhalt ?></div>
++    <div class="mini-inhalt" style="margin-top:0.5em;"><?= nl2br($p->inhalt) ?></div>
+     <?php endif; ?>
+ 
+   </div>
+diff --git a/tn/mini_kurs_sehen.php b/tn/mini_kurs_sehen.php
+index c6190b9..660e6db 100644
+--- a/tn/mini_kurs_sehen.php
++++ b/tn/mini_kurs_sehen.php
+@@ -43,7 +43,7 @@ $kurs->makeSehen('sehen');
+ <?php foreach ($paragraphen as $p): ?>
+   <div class="mini-paragraph">
+     <h3><?= htmlspecialchars($p->titel) ?></h3>
+-    <div class="mini-inhalt"><?= $p->inhalt /* HTML erlaubt */ ?></div>
++    <div class="mini-inhalt"><?= nl2br($p->inhalt) /* HTML erlaubt */ ?></div>
+   </div>
+ <?php endforeach; ?>
+ </div>
+diff --git a/verwaltung/mini_kurs_sehen.php b/verwaltung/mini_kurs_sehen.php
+index 2ee9dc1..e609ba4 100644
+--- a/verwaltung/mini_kurs_sehen.php
++++ b/verwaltung/mini_kurs_sehen.php
+@@ -36,7 +36,7 @@ $kurs->makeSehen('sehen');
+ <?php foreach ($paragraphen as $p): ?>
+   <div class="mini-paragraph" style="border:1px solid #ccc; margin-bottom:1em; padding:0.5em;">
+     <h3><?= htmlspecialchars($p->titel) ?></h3>
+-    <div class="mini-inhalt"><?= $p->inhalt ?></div>
++    <div class="mini-inhalt"><?= nl2br($p->inhalt) ?></div>
+   </div>
+ <?php endforeach; ?>
+ </div>
