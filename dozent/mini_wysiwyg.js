@@ -271,8 +271,17 @@ var MiniWysiwyg = (function () {
   // Sync mit der ursprünglichen Textarea (Formular-Kompatibilität)
   // ---------------------------------------------------------------------
 
+  // Der Browser legt beim Tippen im contenteditable eigenständig <p>-Absätze
+  // an (z.B. durch Enter) - eine zusätzliche Leerzeile am Ende hinterlässt
+  // dabei einen leeren <p></p>-Rest, der inhaltlich nichts beiträgt. Wird
+  // NUR beim Auslesen entfernt, nie am sichtbaren Editor selbst, damit dem
+  // Nutzer beim Tippen nichts unter dem Cursor verschwindet.
+  function stripTrailingEmptyParagraphs(html) {
+    return html.replace(/(<p>(?:\s|&nbsp;)*<\/p>\s*)+$/i, '');
+  }
+
   function syncTextarea(instance) {
-    instance.textarea.value = instance.editor.innerHTML;
+    instance.textarea.value = stripTrailingEmptyParagraphs(instance.editor.innerHTML);
   }
 
   // ---------------------------------------------------------------------
@@ -344,7 +353,7 @@ var MiniWysiwyg = (function () {
 
   function getContent(textareaId) {
     var instance = instances[textareaId];
-    return instance ? instance.editor.innerHTML : null;
+    return instance ? stripTrailingEmptyParagraphs(instance.editor.innerHTML) : null;
   }
 
   function insertContent(textareaId, html) {
