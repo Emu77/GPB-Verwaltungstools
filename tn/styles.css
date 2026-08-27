@@ -115,3 +115,15 @@ h2 {
 .mini-paragraph-bearbeiten-formular textarea {
   background-color:#fff;
 }
+
+/* Mini-Kurs: Listen in gespeichertem Paragraph-Inhalt mit "-" statt Punkt
+   und ohne Einrückung (konsistent zur Dozenten-Ansicht) */
+.mini-inhalt ul,
+.mini-inhalt ol {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+.mini-inhalt ul li::before {
+  content: "- ";
+}

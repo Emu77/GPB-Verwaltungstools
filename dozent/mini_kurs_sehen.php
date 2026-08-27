@@ -521,12 +521,17 @@ if (!empty($fehler)): ?>
       <div style="margin-top:0.5em;">
         <label><strong>Inhalt (HTML erlaubt):</strong></label>
         <div class="mini-format-toolbar" style="margin-bottom:0.3em;">
+          <span class="mini-format-plain-buttons">
           <button type="button" class="mini-format-btn" data-open="&lt;strong&gt;" data-close="&lt;/strong&gt;"><strong>Fett</strong></button>
           <button type="button" class="mini-format-btn" data-open="&lt;em&gt;" data-close="&lt;/em&gt;"><em>Kursiv</em></button>
           <button type="button" class="mini-format-btn" data-open="&lt;u&gt;" data-close="&lt;/u&gt;"><u>Unterstrichen</u></button>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:red&quot;&gt;" data-close="&lt;/span&gt;" style="color:red;">Rot</button>
           <button type="button" class="mini-format-btn" data-open="&lt;span style=&quot;color:green&quot;&gt;" data-close="&lt;/span&gt;" style="color:green;">Grün</button>
           <button type="button" class="mini-format-liste-btn">Liste</button>
+          </span>
+          <label style="margin-left:1em;" title="Formatierten Editor mit Werkzeugleiste statt reinem HTML-Textfeld verwenden">
+            <input type="checkbox" class="mini-wysiwyg-toggle" autocomplete="off" /> WYSIWYG-Editor
+          </label>
         </div>
         <div class="mini-vorschau mini-inhalt" style="display:none; margin-bottom:0.3em;">
           <div class="mini-vorschau-inhalt"></div>
@@ -585,16 +590,20 @@ if (!empty($fehler)): ?>
     try { localStorage.setItem(WYSIWYG_PREF_KEY, e.target.checked ? '1' : '0'); } catch (ex) {}
   });
 
-  // Beim Laden: gespeicherte Präferenz auf alle vorhandenen Toggles anwenden
-  (function () {
+  // Beim Laden: gespeicherte Präferenz auf alle vorhandenen Toggles anwenden.
+  // Als eigene Funktion, damit sie auch auf neu eingefügte Formulare (z.B.
+  // "+ neuer Paragraph") angewendet werden kann, nicht nur beim Seitenladen.
+  function miniWysiwygPraefAnwenden(checkboxes) {
     var pref;
     try { pref = localStorage.getItem(WYSIWYG_PREF_KEY); } catch (ex) { pref = null; }
     if (pref !== '1') return;
-    container.querySelectorAll('.mini-wysiwyg-toggle').forEach(function (checkbox) {
+    checkboxes.forEach(function (checkbox) {
       checkbox.checked = true;
       checkbox.dispatchEvent(new Event('change', { bubbles: true }));
     });
-  })();
+  }
+
+  miniWysiwygPraefAnwenden(Array.prototype.slice.call(container.querySelectorAll('.mini-wysiwyg-toggle')));
 
   // Vor dem Absenden: Editor-Inhalt in die eigentliche Textarea übernehmen,
   // sonst würde das Formular den alten (vor dem Editor-Start gespeicherten)
@@ -626,8 +635,18 @@ if (!empty($fehler)): ?>
     var clone = tpl.content.cloneNode(true);
     clone.querySelector('input[name="position"]').value = position;
 
+    // Eindeutige Textarea-ID vergeben (ein neuer, noch nicht gespeicherter
+    // Paragraph hat keine feste $p->id) und die WYSIWYG-Checkbox darauf
+    // verknüpfen, damit der Custom-Editor auch hier nutzbar ist.
+    var neueTextarea = clone.querySelector('textarea[name="inhalt"]');
+    var neueId = 'mini-inhalt-neu-' + Date.now();
+    neueTextarea.id = neueId;
+    var neueCheckbox = clone.querySelector('.mini-wysiwyg-toggle');
+    if (neueCheckbox) neueCheckbox.setAttribute('data-target', neueId);
+
     form.style.display = 'none';
     form.parentNode.appendChild(clone);
+    if (neueCheckbox) miniWysiwygPraefAnwenden([neueCheckbox]);
     var titelFeld = form.parentNode.querySelector('input[name="titel"]');
     if (titelFeld) titelFeld.focus();
   });

@@ -4,17 +4,22 @@
  *   - HTML-Grundgerüst (contenteditable-Fläche + Toolbar-Markup)
  *   - Aufbau Selection-/Range-Zugriff
  *   - Formatierungsfunktionen Fett/Kursiv/Unterstrichen/Farbe inkl. Toggle-Logik
+ * Phase 3: Liste + Quellcode-Ansicht
+ *   - Listenfunktion (toggleList): zeilenweise <ul><li>, Toggle-Logik analog
+ *     zu den Inline-Formatierungen, aber auf Block-Ebene
+ *   - Quellcode-Ansicht (toggleSourceView): rohes HTML direkt bearbeitbar,
+ *     löst die contenteditable-Fläche temporär durch eine <textarea> ab
  *
  * Kein document.execCommand() (deprecated) - Formatierung wird selbst über
  * die Range-API umgesetzt, analog zum Prinzip der bestehenden Plain-Text-
  * Toolbar (mini-format-btn: öffnen/schließen bzw. Toggle bei exakter Markierung).
  *
- * Einbindung pro Textarea (später in mini_kurs_sehen.php statt tinymce.init):
+ * Einbindung pro Textarea (in mini_kurs_sehen.php statt tinymce.init):
  *   MiniWysiwyg.init(textareaElement);
  *
  * Bekannte Einschränkung (wie beim bisherigen Plain-Text-Toggle bewusst
  * in Kauf genommen): bei überlappenden/verschachtelten Markierungen kann
- * unsauberes HTML entstehen. Für Phase 3/4 ggf. verfeinern.
+ * unsauberes HTML entstehen.
  */
 var MiniWysiwyg = (function () {
   'use strict';
@@ -38,7 +43,10 @@ var MiniWysiwyg = (function () {
       '<button type="button" class="mini-cwysiwyg-btn mini-cwysiwyg-color" data-cmd="color" data-color="red" title="Rot" style="color:red;">A</button>' +
       '<button type="button" class="mini-cwysiwyg-btn mini-cwysiwyg-color" data-cmd="color" data-color="green" title="Grün" style="color:green;">A</button>' +
       '<span class="mini-cwysiwyg-sep"></span>' +
-      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="removeformat" title="Formatierung entfernen">⨯</button>';
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="removeformat" title="Formatierung entfernen">⨯</button>' +
+      '<span class="mini-cwysiwyg-sep"></span>' +
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="list" title="Liste">☰ Liste</button>' +
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="source" title="Quellcode-Ansicht">&lt;/&gt;</button>';
     return toolbar;
   }
 
@@ -237,34 +245,255 @@ var MiniWysiwyg = (function () {
   // exakt dem Inhalt eines umschließenden Tags entspricht, NUR den reinen
   // Text - das leere Tag bleibt an Ort und Stelle zurück, und der wieder
   // eingefügte Text landet erneut genau darin (keine sichtbare Änderung).
-  // Deshalb: Text durch einen reinen Textknoten ersetzen und danach jede
-  // umschließende Formatierung (deren gesamter Inhalt jetzt nur noch dieser
-  // Text ist) gezielt von außen nach innen auflösen.
+  // Zwei Fälle werden deshalb unterschieden:
+  //  1) Auswahl liegt komplett innerhalb EINES Inline-Tags (z.B. genau der
+  //     Inhalt einer <span>) - über Textknoten-Ersetzung lösen, das räumt
+  //     die leere Hülle zuverlässig mit auf.
+  //  2) Auswahl umfasst mehrere Blöcke/Listenelemente - hier NICHT alles
+  //     zu einem Textknoten flachklopfen (das würde <ul>/<li> zerstören),
+  //     sondern die Block-Struktur erhalten und nur Inline-Tags darin
+  //     entfernen.
   function removeFormatting(editor) {
     var range = getEditorRange(editor);
-    if (!range || range.collapsed) return;
+    if (!range) return;
 
-    var text = range.toString();
-    range.deleteContents();
-    var textNode = document.createTextNode(text);
-    range.insertNode(textNode);
+    var inlineSelector = 'strong, em, u, span';
 
-    var changed = true;
-    while (changed) {
-      changed = false;
-      var ancestor = closestWithinEditor(textNode, 'strong, em, u, span', editor);
-      if (ancestor && ancestor.textContent === text) {
-        unwrapElement(ancestor);
-        changed = true;
+    // Cursor ohne Auswahl: alle umschließenden Formatierungen direkt
+    // auflösen (von innen nach außen), kein vorheriges Markieren nötig -
+    // analog zum Listen-Toggle. Erst ALLE betroffenen Vorfahren einsammeln
+    // und danach unwrappen, statt zwischendurch neu zu suchen: unwrapElement()
+    // ruft intern normalize() auf, das benachbarte Textknoten verschmilzt
+    // und eine erneute Live-Suche vom (ggf. verschmolzenen) Startknoten aus
+    // unzuverlässig machen würde.
+    if (range.collapsed) {
+      var node = range.startContainer;
+      var el = node.nodeType === 3 ? node.parentElement : node;
+      var ancestors = [];
+      while (el && el !== editor) {
+        if (el.matches && el.matches(inlineSelector)) ancestors.push(el);
+        el = el.parentElement;
       }
+      if (ancestors.length === 0) return;
+      ancestors.forEach(function (a) { unwrapElement(a); });
+      window.getSelection().removeAllRanges();
+      normalizeInlineTags(editor);
+      return;
     }
 
-    // Keine exakte Reselektion des Textknotens: unwrapElement() ruft intern
-    // parent.normalize() auf, das benachbarte Textknoten verschmilzt - der
-    // ursprüngliche textNode wäre danach ggf. bereits aus dem DOM entfernt
-    // (führte zu "InvalidNodeTypeError"). Selektion daher einfach leeren.
+    var startInline = closestWithinEditor(range.startContainer, inlineSelector, editor);
+    var endInline = closestWithinEditor(range.endContainer, inlineSelector, editor);
+
+    if (startInline && startInline === endInline && startInline.textContent === range.toString()) {
+      var text = range.toString();
+      range.deleteContents();
+      var textNode = document.createTextNode(text);
+      range.insertNode(textNode);
+
+      var changed = true;
+      while (changed) {
+        changed = false;
+        var ancestor = closestWithinEditor(textNode, inlineSelector, editor);
+        if (ancestor && ancestor.textContent === text) {
+          unwrapElement(ancestor);
+          changed = true;
+        }
+      }
+
+      // Keine exakte Reselektion des Textknotens: unwrapElement() ruft
+      // intern parent.normalize() auf, das benachbarte Textknoten
+      // verschmilzt - der ursprüngliche textNode wäre danach ggf. bereits
+      // aus dem DOM entfernt ("InvalidNodeTypeError"). Selektion daher
+      // einfach leeren.
+      window.getSelection().removeAllRanges();
+      normalizeInlineTags(editor);
+      return;
+    }
+
+    // Fall 2: Block-Struktur (Listen, Absätze) bleibt erhalten, nur
+    // Inline-Formatierung innerhalb der Selektion wird entfernt.
+    var frag = range.extractContents();
+    frag.querySelectorAll(inlineSelector).forEach(function (el) { unwrapElement(el); });
+    range.insertNode(frag);
+
+    // An den Rändern können dabei leere <p></p>- bzw. <li></li>-Reste
+    // entstehen (dort, wo die Selektion einen Absatz/Listenpunkt mittendrin
+    // geteilt hat) - gleich mit aufräumen, betrifft nur diese eine Aktion.
+    editor.querySelectorAll('p, li').forEach(function (p) {
+      if (p.textContent.trim() === '' && p.children.length === 0) p.remove();
+    });
+
     window.getSelection().removeAllRanges();
     normalizeInlineTags(editor);
+  }
+
+  // ---------------------------------------------------------------------
+  // Liste (Phase 3): Toggle-Logik analog zu den Inline-Formatierungen,
+  // aber auf Block-Ebene - eine <li> pro markierter Zeile.
+  // ---------------------------------------------------------------------
+
+  // Ermittelt die "Zeilen" einer Selektion anhand der DOM-Struktur statt
+  // über range.toString(): Zeilenumbrüche zwischen Block-Elementen (<p>,
+  // <div>, <li>) bzw. an <br> werden dabei zuverlässig erkannt, unabhängig
+  // von browserspezifischem Verhalten bei der Text-Serialisierung.
+  // Liefert pro Zeile ein DOM-Fragment (nicht nur reinen Text) - dadurch
+  // bleibt Inline-Formatierung (Fett, Farbe, ...) innerhalb der Zeilen beim
+  // Umwandeln in eine Liste erhalten.
+  function extractLineFragmentsFromRange(range) {
+    var cloned = range.cloneContents();
+    var lines = [];
+    var current = document.createDocumentFragment();
+
+    function hasContent(frag) {
+      return Array.prototype.some.call(frag.childNodes, function (n) {
+        return n.textContent.trim() !== '';
+      });
+    }
+
+    function flush() {
+      if (hasContent(current)) lines.push(current);
+      current = document.createDocumentFragment();
+    }
+
+    Array.prototype.forEach.call(cloned.childNodes, function (node) {
+      if (node.nodeType === 1 && /^(P|DIV|LI)$/.test(node.tagName)) {
+        flush();
+        var inner = document.createDocumentFragment();
+        while (node.firstChild) inner.appendChild(node.firstChild);
+        if (hasContent(inner)) lines.push(inner);
+      } else if (node.nodeType === 1 && node.tagName === 'BR') {
+        flush();
+      } else {
+        current.appendChild(node);
+      }
+    });
+    flush();
+    return lines;
+  }
+
+  // Ermittelt, ob eine komplette Liste (ul/ol) von der Selektion umschlossen
+  // wird - und zwar in ZWEI Varianten, die Browser je nach Selektionsart
+  // erzeugen können:
+  //  a) Start/Ende liegen in einem Textknoten INNERHALB der Liste (typisch
+  //     bei normalem Maus-Ziehen über den sichtbaren Text).
+  //  b) Start/Ende liegen auf Container-Ebene, wobei die Liste als ganzes
+  //     Kind-Element selektiert ist (typisch bei Strg+A / "Select All"
+  //     über mehrere Blockelemente hinweg - der Browser markiert dann oft
+  //     den gesamten Container statt tief in die Textknoten zu gehen).
+  function findEnclosingList(range, editor) {
+    var startList = closestWithinEditor(range.startContainer, 'ul, ol', editor);
+    var endList = range.collapsed ? startList : closestWithinEditor(range.endContainer, 'ul, ol', editor);
+    if (startList && startList === endList) return startList;
+
+    // Variante b) prüfen: Start-/Endpunkt referenziert per Kindindex direkt
+    // dieselbe <ul>/<ol> als selektiertes Element.
+    if (!range.collapsed && range.startContainer.nodeType === 1 && range.endContainer.nodeType === 1) {
+      var startChild = range.startContainer.childNodes[range.startOffset];
+      var endChild = range.endContainer.childNodes[range.endOffset - 1];
+      if (startChild && startChild === endChild && /^(UL|OL)$/.test(startChild.tagName)) {
+        return startChild;
+      }
+    }
+    return null;
+  }
+
+  function toggleList(editor) {
+    var range = getEditorRange(editor);
+    if (!range) return;
+
+    // Auflösen einer Liste soll auch bei reinem Cursor (ohne markierten
+    // Text) funktionieren - man will ja nicht erst extra markieren müssen,
+    // nur um eine Liste wieder loszuwerden. Eine NEUE Liste erzeugen
+    // braucht dagegen zwingend eine echte Auswahl (sonst gäbe es keinen
+    // Text zum Umwandeln), siehe Prüfung weiter unten.
+    var enclosingList = findEnclosingList(range, editor);
+
+    // Toggle AUS: komplette Auswahl liegt bereits in derselben Liste ->
+    // jedes <li> wird wieder zu einem eigenen <p> (Formatierung innerhalb
+    // der Zeilen, z.B. Fett, bleibt dabei erhalten).
+    if (enclosingList) {
+      var frag = document.createDocumentFragment();
+      Array.prototype.forEach.call(enclosingList.children, function (li) {
+        var p = document.createElement('p');
+        while (li.firstChild) p.appendChild(li.firstChild);
+        frag.appendChild(p);
+      });
+      enclosingList.parentNode.insertBefore(frag, enclosingList);
+      enclosingList.remove();
+      window.getSelection().removeAllRanges();
+      normalizeInlineTags(editor);
+      return;
+    }
+
+    // Toggle AN: braucht eine echte Auswahl, sonst gäbe es keinen Text,
+    // der in eine Liste umgewandelt werden könnte.
+    if (range.collapsed) return;
+
+    // Toggle AN: markierten Text zeilenweise in eine Liste umwandeln.
+    // Inline-Formatierung (Fett, Farbe, ...) innerhalb der Zeilen bleibt
+    // dabei erhalten (siehe extractLineFragmentsFromRange).
+    var lineFragments = extractLineFragmentsFromRange(range);
+
+    var ul = document.createElement('ul');
+    if (lineFragments.length === 0) {
+      // Fallback, falls keine Zeilenstruktur erkannt wurde: reiner Text.
+      var liFallback = document.createElement('li');
+      liFallback.textContent = range.toString();
+      ul.appendChild(liFallback);
+    } else {
+      lineFragments.forEach(function (frag) {
+        var li = document.createElement('li');
+        li.appendChild(frag);
+        ul.appendChild(li);
+      });
+    }
+
+    range.deleteContents();
+    range.insertNode(ul);
+
+    // Beim Einfügen können an den Rändern leere <p></p>-Reste entstehen
+    // (dort, wo die Selektion einen Absatz mittendrin geteilt hat) -
+    // gleich mit aufräumen, betrifft nur diese eine Aktion.
+    editor.querySelectorAll('p').forEach(function (p) {
+      if (p.textContent.trim() === '' && p.children.length === 0) p.remove();
+    });
+
+    window.getSelection().removeAllRanges();
+    normalizeInlineTags(editor);
+  }
+
+  // ---------------------------------------------------------------------
+  // Quellcode-Ansicht (Phase 3): rohes HTML direkt bearbeitbar machen.
+  // ---------------------------------------------------------------------
+
+  function setOtherButtonsDisabled(toolbar, disabled) {
+    toolbar.querySelectorAll('.mini-cwysiwyg-btn').forEach(function (btn) {
+      if (btn.getAttribute('data-cmd') !== 'source') btn.disabled = disabled;
+    });
+  }
+
+  function toggleSourceView(instance) {
+    var editor = instance.editor;
+    if (!instance.sourceTextarea) {
+      // Quellcode-Ansicht aktivieren: contenteditable ausblenden, rohes
+      // HTML in einer eigenen <textarea> zum direkten Bearbeiten zeigen.
+      var source = document.createElement('textarea');
+      source.className = 'mini-cwysiwyg-source';
+      source.value = editor.innerHTML;
+      source.addEventListener('input', function () { syncTextarea(instance); });
+      editor.parentNode.insertBefore(source, editor.nextSibling);
+      editor.style.display = 'none';
+      instance.sourceTextarea = source;
+      setOtherButtonsDisabled(instance.toolbar, true);
+    } else {
+      // Zurück zur normalen Ansicht: eingegebenes HTML übernehmen.
+      editor.innerHTML = instance.sourceTextarea.value;
+      instance.sourceTextarea.remove();
+      instance.sourceTextarea = null;
+      editor.style.display = '';
+      setOtherButtonsDisabled(instance.toolbar, false);
+      syncTextarea(instance);
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -281,7 +510,11 @@ var MiniWysiwyg = (function () {
   }
 
   function syncTextarea(instance) {
-    instance.textarea.value = stripTrailingEmptyParagraphs(instance.editor.innerHTML);
+    // Während aktiver Quellcode-Ansicht ist editor.innerHTML noch nicht
+    // aktualisiert (erst beim Zurückschalten) - der aktuelle Stand steht
+    // bis dahin in der Quellcode-Textarea.
+    var html = instance.sourceTextarea ? instance.sourceTextarea.value : instance.editor.innerHTML;
+    instance.textarea.value = stripTrailingEmptyParagraphs(html);
   }
 
   // ---------------------------------------------------------------------
@@ -312,6 +545,16 @@ var MiniWysiwyg = (function () {
     toolbar.addEventListener('click', function (e) {
       var btn = e.target.closest('.mini-cwysiwyg-btn');
       if (!btn) return;
+      var cmd = btn.getAttribute('data-cmd');
+
+      // Quellcode-Ansicht zuerst behandeln: editor ist dabei ggf. versteckt,
+      // die übliche focus()/Selektions-Logik unten würde darauf ins Leere
+      // laufen bzw. wäre für diesen Fall gar nicht sinnvoll.
+      if (cmd === 'source') {
+        toggleSourceView(instance);
+        return;
+      }
+      if (instance.sourceTextarea) return; // während Quellcode-Ansicht: andere Buttons ignorieren (zusätzlich zu disabled)
 
       // Bugfix: Solange die Editor-Fläche noch nie echten Fokus hatte
       // (z.B. gleich der erste Formatierungs-Klick nach dem Markieren),
@@ -328,13 +571,13 @@ var MiniWysiwyg = (function () {
         }
       }
 
-      var cmd = btn.getAttribute('data-cmd');
       switch (cmd) {
         case 'bold': toggleInline(editor, 'strong'); break;
         case 'italic': toggleInline(editor, 'em'); break;
         case 'underline': toggleInline(editor, 'u'); break;
         case 'color': toggleColor(editor, btn.getAttribute('data-color')); break;
         case 'removeformat': removeFormatting(editor); break;
+        case 'list': toggleList(editor); break;
       }
       syncTextarea(instance);
     });
@@ -345,6 +588,7 @@ var MiniWysiwyg = (function () {
   function destroy(textareaId) {
     var instance = instances[textareaId];
     if (!instance) return;
+    if (instance.sourceTextarea) instance.editor.innerHTML = instance.sourceTextarea.value;
     syncTextarea(instance);
     instance.wrapper.remove();
     instance.textarea.style.display = '';
@@ -353,7 +597,9 @@ var MiniWysiwyg = (function () {
 
   function getContent(textareaId) {
     var instance = instances[textareaId];
-    return instance ? stripTrailingEmptyParagraphs(instance.editor.innerHTML) : null;
+    if (!instance) return null;
+    var html = instance.sourceTextarea ? instance.sourceTextarea.value : instance.editor.innerHTML;
+    return stripTrailingEmptyParagraphs(html);
   }
 
   function insertContent(textareaId, html) {

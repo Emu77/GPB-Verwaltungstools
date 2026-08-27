@@ -27,6 +27,11 @@
   border-color: #bbb;
 }
 
+.mini-cwysiwyg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .mini-cwysiwyg-color {
   font-weight: bold;
 }
@@ -46,4 +51,31 @@
 
 .mini-cwysiwyg-editor:focus {
   background: #fffef8;
+}
+
+.mini-cwysiwyg-source {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  padding: 0.5em;
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: 0.9em;
+  border: none;
+  outline: none;
+  resize: vertical;
+}
+
+/* Listen mit "-" statt Punkt und ohne Einrückung, sowohl im Editor selbst
+   als auch überall dort, wo gespeicherter Mini-Kurs-Inhalt angezeigt wird
+   (siehe dozent/styles.css und tn/styles.css für dieselbe Regel). */
+.mini-cwysiwyg-editor ul,
+.mini-cwysiwyg-editor ol {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.mini-cwysiwyg-editor ul li::before {
+  content: "- ";
 }
