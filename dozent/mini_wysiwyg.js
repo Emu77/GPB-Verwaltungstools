@@ -233,29 +233,37 @@ var MiniWysiwyg = (function () {
     normalizeInlineTags(editor);
   }
 
-  // Formatierung komplett entfernen: alle strong/em/u/span innerhalb der
-  // Selektion auflösen. Einfache Variante für Phase 2 - iteriert über die
-  // Elemente, die die Range berührt.
+  // Bugfix: range.extractContents() extrahiert bei einer Selektion, die
+  // exakt dem Inhalt eines umschließenden Tags entspricht, NUR den reinen
+  // Text - das leere Tag bleibt an Ort und Stelle zurück, und der wieder
+  // eingefügte Text landet erneut genau darin (keine sichtbare Änderung).
+  // Deshalb: Text durch einen reinen Textknoten ersetzen und danach jede
+  // umschließende Formatierung (deren gesamter Inhalt jetzt nur noch dieser
+  // Text ist) gezielt von außen nach innen auflösen.
   function removeFormatting(editor) {
     var range = getEditorRange(editor);
     if (!range || range.collapsed) return;
 
-    var container = document.createElement('div');
-    container.appendChild(range.extractContents());
+    var text = range.toString();
+    range.deleteContents();
+    var textNode = document.createTextNode(text);
+    range.insertNode(textNode);
 
-    ['strong', 'em', 'u', 'span'].forEach(function (tag) {
-      container.querySelectorAll(tag).forEach(function (el) { unwrapElement(el); });
-    });
+    var changed = true;
+    while (changed) {
+      changed = false;
+      var ancestor = closestWithinEditor(textNode, 'strong, em, u, span', editor);
+      if (ancestor && ancestor.textContent === text) {
+        unwrapElement(ancestor);
+        changed = true;
+      }
+    }
 
-    var frag = document.createDocumentFragment();
-    while (container.firstChild) frag.appendChild(container.firstChild);
-
-    var newRange = document.createRange();
-    newRange.selectNodeContents(frag);
-    range.insertNode(frag);
-
-    var sel = window.getSelection();
-    sel.removeAllRanges();
+    // Keine exakte Reselektion des Textknotens: unwrapElement() ruft intern
+    // parent.normalize() auf, das benachbarte Textknoten verschmilzt - der
+    // ursprüngliche textNode wäre danach ggf. bereits aus dem DOM entfernt
+    // (führte zu "InvalidNodeTypeError"). Selektion daher einfach leeren.
+    window.getSelection().removeAllRanges();
     normalizeInlineTags(editor);
   }
 

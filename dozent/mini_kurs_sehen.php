@@ -340,7 +340,7 @@ if (!empty($fehler)): ?>
           <button type="button" class="mini-bild-einfuegen-btn">Bild einfügen</button>
           <?php endif; ?>
           <label style="margin-left:1em;" title="Formatierten Editor mit Werkzeugleiste statt reinem HTML-Textfeld verwenden">
-            <input type="checkbox" class="mini-wysiwyg-toggle" data-target="mini-inhalt-<?= $p->id ?>" /> WYSIWYG-Editor
+            <input type="checkbox" class="mini-wysiwyg-toggle" autocomplete="off" data-target="mini-inhalt-<?= $p->id ?>" /> WYSIWYG-Editor
           </label>
         </div>
         <!-- Die Vorschau bekommt bewusst KEIN eigenes Gelb/Rahmen-Styling -
@@ -592,7 +592,7 @@ if (!empty($fehler)): ?>
     if (pref !== '1') return;
     container.querySelectorAll('.mini-wysiwyg-toggle').forEach(function (checkbox) {
       checkbox.checked = true;
-      checkbox.dispatchEvent(new Event('change'));
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
     });
   })();
 
