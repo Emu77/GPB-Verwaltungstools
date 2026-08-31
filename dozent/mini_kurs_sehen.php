@@ -20,6 +20,7 @@ $fehler = '';
 $erfolg = '';
 
 require_once '../MiniAnhang.php';
+require_once '../MiniHtmlSanitizer.php';
 
 function gpbMiniNormalisieren($s) {
   return str_replace("\r", "\n", str_replace("\r\n", "\n", $s));
@@ -115,7 +116,7 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'anhang_loeschen' && isset($
 // Paragraph hinzufügen (optional mit Titel/Inhalt und an einer bestimmten Position)
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'hinzufuegen') {
   $titel = $_POST['titel'] ?? '';
-  $inhalt = isset($_POST['inhalt']) ? gpbMiniNormalisieren($_POST['inhalt']) : '';
+  $inhalt = isset($_POST['inhalt']) ? gpbMiniHtmlSaeubern(gpbMiniNormalisieren($_POST['inhalt'])) : '';
 
   // Bestehende Paragraphen laden, um Position zu bestimmen und ggf. umzunummerieren
   $res = $db->query("SELECT id, nummer FROM `gpb_mini_paragraph` WHERE kursid=" . $kurs->id . " ORDER BY nummer ASC");
@@ -179,7 +180,7 @@ if (isset($_POST['aktion']) && $_POST['aktion'] === 'loeschen' && isset($_POST['
 if (isset($_POST['aktion']) && $_POST['aktion'] === 'speichern' && isset($_POST['pid'])) {
   $pid = (int)$_POST['pid'];
   $titel = $_POST['titel'] ?? '';
-  $inhalt = isset($_POST['inhalt']) ? gpbMiniNormalisieren($_POST['inhalt']) : '';
+  $inhalt = isset($_POST['inhalt']) ? gpbMiniHtmlSaeubern(gpbMiniNormalisieren($_POST['inhalt'])) : '';
   $stmt = $db->prepare("UPDATE `gpb_mini_paragraph` SET titel=?, inhalt=? WHERE id=? AND kursid=?");
   $stmt->bind_param('ssii', $titel, $inhalt, $pid, $kurs->id);
   $stmt->execute();
