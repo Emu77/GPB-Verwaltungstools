@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08
+
+### Phase 4: Serverseitige HTML-Sanitisierung (Mini-WYSIWYG-Editor)
+- Neue Datei `MiniHtmlSanitizer.php` mit `gpbMiniHtmlSaeubern()`: Whitelist-basierte Sanitisierung des vom Mini-WYSIWYG-Editor gelieferten HTML-Inhalts auf DOMDocument-Basis (kein HTMLPurifier, da nicht praktikabel einzubinden).
+- Erlaubte Tags: `strong`, `em`, `u`, `span` (nur `style="color:..."`), `ul`, `ol`, `li`, `p`, `br`, `img` (nur `src`, `alt`). Alle anderen Tags werden entfernt, ihr Inhalt bleibt (nach rekursiver Bereinigung) erhalten.
+- `<script>`, `<iframe>`, `<object>`, `<style>`, `<embed>`, `<link>`, `<meta>` werden inkl. Inhalt vollständig entfernt.
+- Event-Handler-Attribute (`onclick`, `onload`, `onmouseover` etc.) sowie alle nicht auf der Whitelist stehenden Attribute werden entfernt.
+- `img`-Quellen: nur eigene Pfade zu `mini_anhang_download.php` erlaubt, externe URLs sowie `javascript:`-/`data:`-URIs werden abgelehnt.
+- Bugfix während der Testphase: Kinder eines entfernten, nicht erlaubten Tags wurden beim Hochziehen nicht rekursiv mitgesäubert (z. B. `<b>` in `<div>` entkam der Prüfung) – behoben durch rekursiven Aufruf vor dem Hochziehen.
+- Einbindung in `dozent/mini_kurs_sehen.php`: Sanitisierung läuft bei den Aktionen `hinzufuegen` und `speichern` direkt vor dem Schreiben in `gpb_mini_paragraph` (nach `gpbMiniNormalisieren()`).
+- Getestet: lokal per PHP-CLI-Testfällen (Script-Injection, Event-Handler, `javascript:`-URI, externe Bildquelle, verschachtelte nicht erlaubte Tags, erlaubte Formatierungen) sowie live im Dozentenbereich (XSS-Payload im Formular eingegeben, gespeichert, Anzeige und gespeicherter Rohcode geprüft).
+
 ## 2026-08-25
 
 ### Mini: Custom-WYSIWYG-Editor – Live-Integration
