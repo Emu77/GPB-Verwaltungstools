@@ -2,7 +2,7 @@
 
 ## 2026-08
 
-### Phase 4: Serverseitige HTML-Sanitisierung (Mini-WYSIWYG-Editor)
+### Serverseitige HTML-Sanitisierung (Mini-WYSIWYG-Editor)
 - Neue Datei `MiniHtmlSanitizer.php` mit `gpbMiniHtmlSaeubern()`: Whitelist-basierte Sanitisierung des vom Mini-WYSIWYG-Editor gelieferten HTML-Inhalts auf DOMDocument-Basis (kein HTMLPurifier, da nicht praktikabel einzubinden).
 - Erlaubte Tags: `strong`, `em`, `u`, `span` (nur `style="color:..."`), `ul`, `ol`, `li`, `p`, `br`, `img` (nur `src`, `alt`). Alle anderen Tags werden entfernt, ihr Inhalt bleibt (nach rekursiver Bereinigung) erhalten.
 - `<script>`, `<iframe>`, `<object>`, `<style>`, `<embed>`, `<link>`, `<meta>` werden inkl. Inhalt vollständig entfernt.
@@ -11,8 +11,6 @@
 - Bugfix während der Testphase: Kinder eines entfernten, nicht erlaubten Tags wurden beim Hochziehen nicht rekursiv mitgesäubert (z. B. `<b>` in `<div>` entkam der Prüfung) – behoben durch rekursiven Aufruf vor dem Hochziehen.
 - Einbindung in `dozent/mini_kurs_sehen.php`: Sanitisierung läuft bei den Aktionen `hinzufuegen` und `speichern` direkt vor dem Schreiben in `gpb_mini_paragraph` (nach `gpbMiniNormalisieren()`).
 - Getestet: lokal per PHP-CLI-Testfällen (Script-Injection, Event-Handler, `javascript:`-URI, externe Bildquelle, verschachtelte nicht erlaubte Tags, erlaubte Formatierungen) sowie live im Dozentenbereich (XSS-Payload im Formular eingegeben, gespeichert, Anzeige und gespeicherter Rohcode geprüft).
-
-## 2026-08-25
 
 ### Mini: Custom-WYSIWYG-Editor – Live-Integration
 - Editor produktiv in `dozent/mini_kurs_sehen.php` eingebunden: TinyMCE-CDN-Script entfernt, stattdessen `mini_wysiwyg.js`/`mini_wysiwyg.css` (Objekt `MiniWysiwyg`).
@@ -23,8 +21,6 @@
 - `secret/`-Ordner (u. a. Klartext-Passwort für den `gpbintern`-Basic-Auth-Account in `intern_pwd.php`/`.internpass`) war rund 2 Monate lang im öffentlichen GitHub-Repo einsehbar. Ordner lokal gelöscht, per `git filter-repo --path secret/ --invert-paths` aus der kompletten Git-Historie entfernt und per `git push --force` überschrieben. `.gitignore` um `secret/` ergänzt.
 - Zusätzlich `.gitignore` um `*_alt`/`*_alt.*` ergänzt (lokale Backup-Dateien wie `mini_kurs_sehen.php_alt` sollen nicht versioniert werden).
 
-## 2026-08-24
-
 ### Mini: Custom-WYSIWYG-Editor (IHK-Projektarbeit, Phase 2 – Editor-Grundgerüst)
 - Neues eigenständiges Editor-Modul als Ersatz für TinyMCE (siehe `docs/Projektantrag_gpb_WYSIWYG_Editor.pdf`, `docs/Umsetzungs_Zeitplan_WYSIWYG_Editor.pdf`): HTML-Grundgerüst (contenteditable-Fläche + Toolbar-Markup), Selection-/Range-Zugriff, Formatierungsfunktionen Fett/Kursiv/Unterstrichen/Farbe inkl. Toggle-Logik.
 - Kein `document.execCommand()` (deprecated) – Formatierung läuft über eigene Range-API-Logik, analog zum Prinzip der bestehenden Plain-Text-Toolbar (`miniFormatToggle()`).
@@ -34,8 +30,6 @@
   - Selektionsverlust beim allerersten Formatierungs-Klick behoben: `editor.focus()` setzte die gerade getroffene Markierung zurück, solange die Editor-Fläche noch nie echten Fokus hatte; Selektion wird jetzt vorher gesichert und danach bei Bedarf wiederhergestellt.
   - Farb-Buttons ersetzen jetzt die bestehende Farbe einer Markierung, statt eine weitere `<span>` zu verschachteln (Toggle aus bei erneutem Klick auf dieselbe Farbe).
 - Alle Fixes mit automatisierten jsdom-Tests abgesichert, nicht nur manuell im Browser geprüft.
-
-## 2026-08-22
 
 ### Mini (Todos & PropertySheet)
 - Auf der Mini-Kurs-Seite selbst (TN und Dozent) wird die allgemeine Todo-Box nicht mehr angezeigt (`$miniSeiteOhneTodos`); auf allen anderen Seiten ist sie jetzt standardmäßig aufgeklappt (`<details open>`) statt eingeklappt.
@@ -62,7 +56,7 @@
 ### Datenbank
 - `gpb_mini_paragraph.id` hatte kein `AUTO_INCREMENT`/`PRIMARY KEY` und vergab bei jedem Insert `id=0`, was zu Dopplungen und falschem Löschen führte; Spalte nachträglich korrigiert (`ALTER TABLE gpb_mini_paragraph MODIFY id INT(11) NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY (id)`), betroffene Testzeilen bereinigt.
 
-## 2026-07-23
+## 2026-07
 
 ### TODO-Liste (Teilnehmer & Dozent)
 - Die "TODO"-Tabelle mit offenen Bewertungen/Berichten wird jetzt standardmäßig eingeklappt angezeigt, statt immer vollständig sichtbar zu sein (`tn/TnSeite.php`, `dozent/DozentSeite.php`).
@@ -73,8 +67,6 @@
 - `db.php` um eine Umgebungs-Weiche ergänzt: lädt je nach `$_SERVER['SERVER_NAME']` automatisch `db.local.php` (lokal) oder `db.prod.php` (Produktion), statt fest codierter Zugangsdaten in einer einzigen Datei.
 - MySQL-Passwort für den Live-Nutzer `web32` erneuert und in `db.prod.php`/`db.php` synchronisiert.
 - Ursache für gescheiterte Teilnehmer-Logins geklärt: kein Code-Fehler, sondern Tests mit nicht existierenden Nutzernamen; mit vorhandenen Testnutzern (`gpb_tn`, Passwort `tn`) funktioniert der Login korrekt.
-
-## 2026-07-19
 
 ### Kurs-PropertySheet
 - Auf-/Zuklapp-Button für die PropertySheet der Kursseite ergänzt (`Kurs.php`, `tn/TnKurs.php`, `verwaltung/VerwaltungKurs.php`, `leitung/LeitungKurs.php`).
@@ -102,8 +94,6 @@
 - `.gitignore` ergänzt: hochgeladene Anhänge (`mini_uploads/dozent_*`) werden nicht versioniert.
 - Fehlerbehandlung beim Upload verbessert: fehlgeschlagene Uploads (z. B. Ordner nicht beschreibbar) werden jetzt als Fehlermeldung angezeigt statt fälschlich als Erfolg, Details landen im `php_error_log`.
 
-## 2026-07-17
-
 ### Mini (Betreuer-Feedback)
 - Moodle- und Mini-Spalte in der Kursliste sowie im Kurs-Property-Sheet zu einer gemeinsamen Zelle "Moodle / Mini" zusammengelegt (`Kurs.php` sowie die Unterklassen `dozent/DozentKurs.php`, `tn/TnKurs.php`, `verwaltung/VerwaltungKurs.php`, `leitung/LeitungKurs.php`).
 - `nl2br()` bei der Anzeige des Mini-Paragraphinhalts ergänzt (`dozent/mini_kurs_sehen.php`, `tn/mini_kurs_sehen.php`, `verwaltung/mini_kurs_sehen.php`).
@@ -112,8 +102,6 @@
 ### Deployment
 - `db.php` aus der Versionskontrolle entfernt (enthielt Live-Zugangsdaten) und zu `.gitignore` hinzugefügt.
 - Live-`db.php` auf `kronisoft.net` mit korrekten Zugangsdaten (User `web32`, Datenbank `usr_web32_4`) aktualisiert.
-
-## 2026-07-15
 
 ### Server-/Deployment-Fixes
 - Fehlerhafte `DocumentRoot` im SSL-VirtualHost (`/opt/lampp/etc/extra/httpd-ssl.conf`) korrigiert: zeigte fälschlich auf `/opt/lampp/htdocs` statt auf `/media/emu/daten/arbeit/htdocs`. Ursache für 403-Fehler bei allen Projekten unter HTTPS.
