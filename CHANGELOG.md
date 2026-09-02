@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09
+
+### Repo-Migration
+- Kompletter Inhalt des Repos `gpb_praktikum` (inkl. vollständiger Git-Historie) nach `GPB-Verwaltungstools` verschoben (`git push --mirror`), passend zur Umbenennung der Anwendung von "gpb_praktikum" auf "GPB Verwaltungstools" (Betreuer-Feedback, siehe Projektantrag). Lokaler Remote `origin` entsprechend umgestellt (SSH statt HTTPS).
+- Altes Repo `gpb_praktikum` nach Verifikation identischer Commit-Historie gelöscht.
+
+### Mini: Custom-WYSIWYG-Editor (IHK-Projektarbeit, Phase 5 – Testing)
+- 34 Testfälle durchgeführt und dokumentiert (`docs/Testprotokoll_WYSIWYG_Editor.md`): 13 Funktionstests, 3 Browsertests Desktop (Chrome/Firefox/Edge), 3 Browsertests mobile/responsive, 15 XSS-Testfälle gegen die Sanitisierung. Alle 34 bestanden.
+- Während der Testphase gefundener Bug (Testfall X9: unvollständige rekursive Bereinigung beim Hochziehen von Kindelementen in `MiniHtmlSanitizer.php`) behoben und erneut verifiziert.
+
+### Mini: Custom-WYSIWYG-Editor – Kann-Kriterien
+- Tastenkombinationen (Strg+B/I/U) bei Durchsicht als bereits in Phase 2 mitimplementiert festgestellt (`bindKeyboardShortcuts()` in `mini_wysiwyg.js`) – kein zusätzlicher Aufwand nötig.
+- Responsives Toolbar-Layout ergänzt: CSS-Media-Query (`max-width: 480px`) in `mini_wysiwyg.css` – größere Tap-Ziele für die Toolbar-Buttons, Text-Label des Listen-Buttons wird auf schmalen Screens ausgeblendet (nur Symbol + Tooltip bleiben). Reaktion auf die in Testfall M2 (320×480) dokumentierte Beobachtung enger Toolbar-Buttons.
+- Undo/Redo weiterhin bewusst nicht umgesetzt (eigene History-Verwaltung wäre bei der Range-API-basierten Formatierungslogik unverhältnismäßig aufwändig gewesen).
+
+### Bugfix: Bearbeiten-Link auf schmalen Screens
+- In `dozent/mini_kurs_sehen.php` fehlte in der Kopfzeile jedes Paragraphen (Titel + Auf/Ab/Bearbeiten/Löschen-Buttons) ein `flex-wrap`; bei sehr schmalen Viewports wurde der "Paragraph bearbeiten"-Link durch `justify-content:space-between` aus dem sichtbaren Bereich geschoben, ohne umzubrechen. Behoben durch `flex-wrap:wrap` plus `gap`.
+
 ## 2026-08
 
 ### Serverseitige HTML-Sanitisierung (Mini-WYSIWYG-Editor)
