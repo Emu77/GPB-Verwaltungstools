@@ -36,16 +36,16 @@ var MiniWysiwyg = (function () {
     toolbar.setAttribute('role', 'toolbar');
     toolbar.setAttribute('aria-label', 'Formatierung');
     toolbar.innerHTML =
-      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="bold" title="Fett"><strong>F</strong></button>' +
-      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="italic" title="Kursiv"><em>K</em></button>' +
-      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="underline" title="Unterstrichen"><u>U</u></button>' +
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="bold" title="Fett (Strg+B)"><strong>F</strong></button>' +
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="italic" title="Kursiv (Strg+I)"><em>K</em></button>' +
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="underline" title="Unterstrichen (Strg+U)"><u>U</u></button>' +
       '<span class="mini-cwysiwyg-sep"></span>' +
       '<button type="button" class="mini-cwysiwyg-btn mini-cwysiwyg-color" data-cmd="color" data-color="red" title="Rot" style="color:red;">A</button>' +
       '<button type="button" class="mini-cwysiwyg-btn mini-cwysiwyg-color" data-cmd="color" data-color="green" title="Grün" style="color:green;">A</button>' +
       '<span class="mini-cwysiwyg-sep"></span>' +
       '<button type="button" class="mini-cwysiwyg-btn" data-cmd="removeformat" title="Formatierung entfernen">⨯</button>' +
       '<span class="mini-cwysiwyg-sep"></span>' +
-      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="list" title="Liste">☰ Liste</button>' +
+      '<button type="button" class="mini-cwysiwyg-btn" data-cmd="list" title="Liste">☰ <span class="mini-cwysiwyg-btn-label">Liste</span></button>' +
       '<button type="button" class="mini-cwysiwyg-btn" data-cmd="source" title="Quellcode-Ansicht">&lt;/&gt;</button>';
     return toolbar;
   }
@@ -463,6 +463,39 @@ var MiniWysiwyg = (function () {
   }
 
   // ---------------------------------------------------------------------
+  // Tastenkombinationen (Kann-Kriterium): Strg+B/I/U für Fett/Kursiv/
+  // Unterstrichen, analog zu den entsprechenden Toolbar-Buttons. Läuft
+  // direkt über dieselbe toggleInline()-Logik, da die Selektion beim
+  // Tastendruck bereits im Editor liegt (kein Fokus-/Range-Bugfix wie
+  // beim Toolbar-Klick nötig).
+  // ---------------------------------------------------------------------
+
+  function bindKeyboardShortcuts(instance) {
+    instance.editor.addEventListener('keydown', function (e) {
+      if (instance.sourceTextarea) return; // während Quellcode-Ansicht deaktiviert
+      var isCtrl = e.ctrlKey || e.metaKey; // metaKey für Cmd auf macOS
+      if (!isCtrl) return;
+
+      var cmd = null;
+      switch (e.key.toLowerCase()) {
+        case 'b': cmd = 'bold'; break;
+        case 'i': cmd = 'italic'; break;
+        case 'u': cmd = 'underline'; break;
+        default: return; // andere Strg-Kombinationen (z.B. Strg+C) unangetastet lassen
+      }
+
+      e.preventDefault(); // verhindert Browser-Standardverhalten (z.B. Lesezeichenleiste bei Strg+B)
+
+      switch (cmd) {
+        case 'bold': toggleInline(instance.editor, 'strong'); break;
+        case 'italic': toggleInline(instance.editor, 'em'); break;
+        case 'underline': toggleInline(instance.editor, 'u'); break;
+      }
+      syncTextarea(instance);
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // Quellcode-Ansicht (Phase 3): rohes HTML direkt bearbeitbar machen.
   // ---------------------------------------------------------------------
 
@@ -541,6 +574,7 @@ var MiniWysiwyg = (function () {
     instances[textarea.id] = instance;
 
     keepSelectionOnMousedown(toolbar);
+    bindKeyboardShortcuts(instance);
 
     toolbar.addEventListener('click', function (e) {
       var btn = e.target.closest('.mini-cwysiwyg-btn');

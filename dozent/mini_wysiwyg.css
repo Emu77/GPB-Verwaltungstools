@@ -6,6 +6,7 @@
 
 .mini-cwysiwyg-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.15em;
   padding: 0.25em;
@@ -79,3 +80,33 @@
 .mini-cwysiwyg-editor ul li::before {
   content: "- ";
 }
+
+/* Kann-Kriterium (nachträglich ergänzt, siehe CHANGELOG/Projektdokumentation
+   4.4 Außerplanmäßige Änderungen): responsives Toolbar-Layout für schmale
+   Viewports. Grundlage: Testprotokoll M2 (320x480) - Editor war voll bedienbar,
+   aber die Buttons standen eng beieinander (kein Fehler, nur suboptimal). */
+@media (max-width: 480px) {
+  .mini-cwysiwyg-toolbar {
+    gap: 0.3em;
+    padding: 0.35em;
+  }
+
+  .mini-cwysiwyg-btn {
+    /* größere Tap-Ziele für Touch-Bedienung (Richtwert ~44px empfohlen) */
+    min-width: 2.2em;
+    min-height: 2.2em;
+    padding: 0.3em 0.6em;
+    font-size: 1em;
+  }
+
+  .mini-cwysiwyg-sep {
+    margin: 0 0.15em;
+  }
+
+  /* "Liste"-Beschriftung nimmt auf schmalen Screens unnötig Platz weg -
+     nur das Symbol behalten, Bedeutung bleibt über title-Tooltip erhalten. */
+  .mini-cwysiwyg-btn-label {
+    display: none;
+  }
+}
+
