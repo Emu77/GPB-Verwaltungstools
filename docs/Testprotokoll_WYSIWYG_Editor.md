@@ -1,4 +1,4 @@
-# Testprotokoll – Custom-WYSIWYG-Editor (gpb_praktikum)
+# Testprotokoll – Custom-WYSIWYG-Editor (GPB-Verwaltungstools)
 
 Projektzeitraum: 24.08.2026 – 06.09.2026 · Phase 5: Testing (01.–02.09.2026)
 
