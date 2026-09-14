@@ -2,6 +2,9 @@
 require_once 'check_login.php';
 require_once 'DozentKurs.php';
 require_once '../Liste.php';
+require_once '../Aufgabe.php';
+require_once '../AufgabeTextUpload.php';
+require_once '../AufgabeMultipleChoice.php';
 
 $kurs = Kurs::einenLaden(isset($_GET['kursid']) ? (int)$_GET['kursid'] : 0, 'DozentKurs');
 if (empty($kurs)) {
@@ -807,6 +810,48 @@ if (!empty($fehler)): ?>
   });
 })();
 </script>
+
+<br />
+
+<h2>Aufgaben</h2>
+
+<?php
+$aufgaben = Aufgabe::ladenFuerKurs($kurs->id);
+if(empty($aufgaben)) {
+?>
+<p><em>Keine Aufgaben vorhanden.</em></p>
+<?php
+} else {
+?>
+<table border="1" cellspacing="0" style="border-collapse:collapse;">
+  <tr>
+    <th>Titel</th>
+    <th>Typ</th>
+    <th>Abgaben</th>
+    <th></th>
+  </tr>
+<?php
+  foreach($aufgaben as $a) {
+    $teilnehmer = $a->ladeTeilnehmerMitAbgabe();
+    $anzahlGesamt = count($teilnehmer);
+    $anzahlAbgegeben = 0;
+    foreach($teilnehmer as $tn) {
+      if(!empty($tn->abgabeid)) $anzahlAbgegeben++;
+    }
+?>
+  <tr>
+    <td><?= htmlspecialchars($a->titel) ?></td>
+    <td><?= $a->typ=='text_upload' ? 'Text/Upload' : ($a->typ=='multiple_choice' ? 'Multiple Choice' : htmlspecialchars($a->typ)) ?></td>
+    <td><?= $anzahlAbgegeben ?> / <?= $anzahlGesamt ?></td>
+    <td><a href="aufgabe_bewertung.php?aufgabeid=<?= $a->id ?>">Noten</a></td>
+  </tr>
+<?php
+  }
+?>
+</table>
+<?php
+}
+?>
 
 <br />
 <a href="kurs_sehen.php?kursid=<?= $kurs->id ?>">Zurück zur Kursseite</a>

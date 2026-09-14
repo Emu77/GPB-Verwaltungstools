@@ -3,6 +3,9 @@ require_once 'check_login.php';
 require_once '../Liste.php';
 require_once 'TnKurs.php';
 require_once '../MiniAnhang.php';
+require_once '../Aufgabe.php';
+require_once '../AufgabeTextUpload.php';
+require_once '../AufgabeMultipleChoice.php';
 
 $kurs = Kurs::einenLaden(isset($_GET['kursid']) ? (int)$_GET['kursid'] : 0, 'TnKurs');
 if (empty($kurs)) {
@@ -15,6 +18,22 @@ $kurs->ladeVonMir();
 if (!$kurs->vonMir) {
   header('Location:kurse.php');
   exit;
+}
+
+// Aufgaben laden - nur die, die bereits sichtbar sind
+$aufgaben = array();
+foreach (Aufgabe::ladenFuerKurs($kurs->id) as $a) {
+  if (empty($a->sichtbarAb) || strtotime($a->sichtbarAb) <= time()) {
+    $aufgaben[] = $a;
+  }
+}
+
+// Fehlermeldung nach Redirect (PRG-Pattern) über die Session übergeben,
+// analog zu $_SESSION['mini_fehler'] weiter unten
+$fehler = '';
+if (!empty($_SESSION['aufgabe_fehler'])) {
+  $fehler = $_SESSION['aufgabe_fehler'];
+  unset($_SESSION['aufgabe_fehler']);
 }
 
 // Paragraphen laden
@@ -56,6 +75,31 @@ $kurs->makeSehen('sehen', true);
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
+  </div>
+<?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php if (!empty($fehler)): ?>
+<div class="nok"><?= htmlspecialchars($fehler) ?></div>
+<?php endif; ?>
+
+<h2>Aufgaben</h2>
+
+<?php if (empty($aufgaben)): ?>
+<p><em>Keine Aufgaben vorhanden.</em></p>
+<?php else: ?>
+<div class="aufgaben">
+<?php foreach ($aufgaben as $a): ?>
+  <div class="aufgabe" id="aufgabe_<?= $a->id ?>">
+    <h3><?= htmlspecialchars($a->titel) ?></h3>
+    <?php if (!empty($a->beschreibung)): ?>
+    <div class="aufgabe-beschreibung"><?= nl2br(htmlspecialchars($a->beschreibung)) ?></div>
+    <?php endif; ?>
+    <?php if (!empty($a->faelligAm)): ?>
+    <p><em>Fällig am <?= date('d.m.Y H:i', strtotime($a->faelligAm)) ?></em></p>
+    <?php endif; ?>
+    <?php $a->makeAbgabeformular($ich->id); ?>
   </div>
 <?php endforeach; ?>
 </div>

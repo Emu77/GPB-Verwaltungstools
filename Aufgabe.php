@@ -92,6 +92,38 @@ class Aufgabe {
     return $row;
   }
 
+  // Alle TN des Kurses inkl. ihrer Abgabe und Bewertung zu dieser Aufgabe
+  // (Abgabe/Bewertung sind null-Felder, wenn der TN noch nichts abgegeben hat).
+  // Für die Dozenten-Notenansicht.
+  function ladeTeilnehmerMitAbgabe() {
+    global $db;
+    $result = $db->query("select beginn,ende from gpb_kurs where id=".intval($this->kursid));
+    $kurs = $result->fetch_object();
+    $result->free();
+    if(empty($kurs)) return array();
+
+    $result = $db->query(
+      "select distinct tn.id as tnid, tn.vorname, tn.nachname,
+        ab.id as abgabeid, ab.text, ab.dateiname, ab.gespeicherter_dateiname, ab.groesse, ab.abgegeben_am,
+        bw.punkte, bw.note, bw.kommentar, bw.bewertet_am
+      from gpb_kurs_klasse kk
+      join gpb_klasse_tn ktn on ktn.klasseid=kk.klasseid
+        and (ktn.einstieg<>'0000-00-00' and ktn.einstieg is not null and ktn.einstieg<='".$db->real_escape_string($kurs->ende)."')
+        and (ktn.ausstieg='0000-00-00' or ktn.ausstieg is null or ktn.ausstieg>='".$db->real_escape_string($kurs->beginn)."')
+      join gpb_tn tn on tn.id=ktn.tnid
+      left join gpb_aufgabe_abgabe ab on ab.aufgabeid=".intval($this->id)." and ab.tnid=tn.id
+      left join gpb_aufgabe_bewertung bw on bw.abgabeid=ab.id
+      where kk.kursid=".intval($this->kursid)."
+      order by tn.nachname, tn.vorname"
+    );
+    $liste = array();
+    while($row = $result->fetch_object()) {
+      $liste[] = $row;
+    }
+    $result->free();
+    return $liste;
+  }
+
   // --- ab hier von Subklassen zu überschreiben ---
 
   // Eingabeformular für den TN (typabhängig: Text/Upload-Felder oder MC-Fragen)
