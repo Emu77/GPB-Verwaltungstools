@@ -143,7 +143,7 @@ class LeitungKurs extends Kurs {
     </td>
 <?php
   }
-  function makeSehen($classname='') {
+  function makeSehen($classname='', $kompaktToggle=false) {
     global $moodleisttest;
     if(isset($_SESSION['fehler']['done'])) {
 ?>
