@@ -815,6 +815,8 @@ if (!empty($fehler)): ?>
 
 <h2>Aufgaben</h2>
 
+<p><a href="aufgabe_erstellen.php?kursid=<?= $kurs->id ?>">+ neue Aufgabe</a></p>
+
 <?php
 $aufgaben = Aufgabe::ladenFuerKurs($kurs->id);
 if(empty($aufgaben)) {

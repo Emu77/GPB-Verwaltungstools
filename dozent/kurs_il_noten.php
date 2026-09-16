@@ -40,7 +40,8 @@ if($kurs->moodleid>0) {
   $url=$moodleurl.'webservice/rest/server.php?wstoken='.$moodletoken.'&wsfunction=local_gpbwebservice_bearbeite_anfragen&moodlewsrestformat=json&aktion=auswerten&daten='.urlencode(json_encode($daten));
   $aufgaben=json_decode(file_get_contents($url));
   if(is_object($aufgaben) && isset($aufgaben->exception)) {
-    $fehler=json_encode($aufgaben);
+    error_log('Moodle-Fehler bei courseid='.$kurs->moodleid.': '.json_encode($aufgaben));
+    $fehler='Die Aufgaben aus Moodle konnten gerade nicht geladen werden. Bitte versuche es später erneut.';
     unset($aufgaben);
   } else if(!is_object($aufgaben)) {
     $aufgaben=json_decode($aufgaben);
@@ -310,7 +311,7 @@ function noten_uebernehmen(modname,cminstance,was) {
     let noten=JSON.parse(this.responseText);
     if(typeof noten=='object' && typeof noten.exception!='undefined') {
       console.log(noten);
-      alert(this.responseText);
+      alert('Die Noten konnten gerade nicht aus Moodle geladen werden.');
       return;
     }
     if(typeof noten=='string') {
