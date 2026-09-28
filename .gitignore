@@ -19,3 +19,6 @@ gpb.sql.zip
 secret/
 secret/
 docs/*.odt
+docs/IHK_*
+docs/antrag_*
+docs/Praktikumsbescheinigung*
