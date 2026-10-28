@@ -62,7 +62,23 @@ $seite->anfangGenerieren();
       <div><a href="../aufgabe_anhang_download.php?abgabeid=<?= $tn->abgabeid ?>" target="aufgabe_download_frame" onclick="var f=document.getElementById('aufgabe_download_frame'); if(!f){f=document.createElement('iframe'); f.name='aufgabe_download_frame'; f.id='aufgabe_download_frame'; f.style.display='none'; document.body.appendChild(f);}"><?= htmlspecialchars($tn->dateiname) ?></a></div>
 <?php endif; ?>
 <?php elseif($aufgabe instanceof AufgabeMultipleChoice): ?>
-      <em>Beantwortet</em>
+<?php $auswertung = $aufgabe->auswerten($tn->abgabeid); ?>
+      <details>
+        <summary><?= $auswertung['richtig'] ?> von <?= $auswertung['gesamt'] ?> richtig</summary>
+        <ol style="margin:0.3em 0;padding-left:1.5em;">
+<?php foreach($auswertung['details'] as $d): ?>
+          <li>
+            <?= htmlspecialchars($d['frage']) ?>:
+<?php if($d['korrekt']): ?>
+            <span style="color:green;">✓ <?= htmlspecialchars($d['gewaehlt']) ?></span>
+<?php else: ?>
+            <span style="color:#b00;">✗ <?= $d['gewaehlt']===null ? '<em>keine Antwort</em>' : htmlspecialchars($d['gewaehlt']) ?></span>
+            <small>(richtig: <?= htmlspecialchars($d['richtig'] ?? '-') ?>)</small>
+<?php endif; ?>
+          </li>
+<?php endforeach; ?>
+        </ol>
+      </details>
 <?php endif; ?>
 <?php endif; ?>
     </td>

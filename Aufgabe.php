@@ -83,6 +83,110 @@ class Aufgabe {
     $stmt->close();
   }
 
+  // Umrechnung zwischen DB-Format (Y-m-d H:i:s) und <input type="datetime-local">
+  static function datumAusFormular($wert) {
+    if(empty($wert)) return null;
+    return str_replace('T', ' ', $wert).':00';
+  }
+  static function datumFuerFormular($wert) {
+    if(empty($wert)) return '';
+    return date('Y-m-d\TH:i', strtotime($wert));
+  }
+
+  // Punktzahl deutsch formatieren, ohne überflüssige Nachkommastellen
+  // (10 statt 10,00; 7,5 statt 7,50)
+  static function punkteFormat($punkte) {
+    if($punkte===null || $punkte==='') return '';
+    return rtrim(rtrim(number_format((float)$punkte, 2, ',', ''), '0'), ',');
+  }
+
+  // true, wenn ein Fälligkeitsdatum gesetzt und bereits überschritten ist -
+  // dann nimmt die Aufgabe keine (neuen/geänderten) Abgaben mehr an.
+  function istAbgelaufen() {
+    return !empty($this->faelligAm) && strtotime($this->faelligAm) < time();
+  }
+
+  // true, wenn die Aufgabe für TN schon sichtbar ist
+  function istSichtbar() {
+    return empty($this->sichtbarAb) || strtotime($this->sichtbarAb) <= time();
+  }
+
+  // Bewertung zu einer Abgabe laden (oder null)
+  function ladeBewertung($abgabeid) {
+    global $db;
+    if(empty($abgabeid)) return null;
+    $result = $db->query("select * from gpb_aufgabe_bewertung where abgabeid=".intval($abgabeid));
+    $row = $result->fetch_object();
+    $result->free();
+    return $row ? $row : null;
+  }
+
+  // Bewertung für den TN anzeigen (nur wenn schon etwas bewertet wurde)
+  function makeBewertungFuerTn($tnid) {
+    $abgabe = $this->ladeAbgabe($tnid);
+    $bw = $this->ladeBewertung($abgabe->id ?? null);
+    if(empty($bw) || ($bw->punkte===null && $bw->note===null && $bw->kommentar===null)) return;
+?>
+    <div class="aufgabe-bewertung">
+      <strong>Bewertung:</strong>
+<?php if($bw->punkte!==null): ?>
+      <?= self::punkteFormat($bw->punkte) ?><?= $this->punkteMax!==null ? ' von '.self::punkteFormat($this->punkteMax) : '' ?> Punkte<?= $bw->note!==null ? ',' : '' ?>
+<?php endif; ?>
+<?php if($bw->note!==null): ?>
+      Note <?= htmlspecialchars($bw->note) ?>
+<?php endif; ?>
+<?php if($bw->kommentar!==null): ?>
+      <div class="aufgabe-bewertung-kommentar"><?= nl2br(htmlspecialchars($bw->kommentar)) ?></div>
+<?php endif; ?>
+    </div>
+<?php
+  }
+
+  // Aufgabe komplett löschen: Bewertungen, Antworten, Abgaben (inkl.
+  // hochgeladener Dateien), Fragen/Optionen und die Aufgabe selbst.
+  // Explizit statt per ON DELETE CASCADE, damit auch die Dateien auf der
+  // Platte mit verschwinden.
+  function loeschen() {
+    global $db;
+    $id = intval($this->id);
+
+    $abgabeids = array();
+    $result = $db->query("select id from gpb_aufgabe_abgabe where aufgabeid=".$id);
+    while($row = $result->fetch_object()) {
+      $abgabeids[] = (int)$row->id;
+    }
+    $result->free();
+
+    if(!empty($abgabeids)) {
+      $liste = implode(',', $abgabeids);
+      $db->query("delete from gpb_aufgabe_bewertung where abgabeid in (".$liste.")");
+      $db->query("delete from gpb_aufgabe_abgabe_antwort where abgabeid in (".$liste.")");
+      $db->query("delete from gpb_aufgabe_abgabe where id in (".$liste.")");
+    }
+
+    $frageids = array();
+    $result = $db->query("select id from gpb_aufgabe_frage where aufgabeid=".$id);
+    while($row = $result->fetch_object()) {
+      $frageids[] = (int)$row->id;
+    }
+    $result->free();
+    if(!empty($frageids)) {
+      $db->query("delete from gpb_aufgabe_option where frageid in (".implode(',', $frageids).")");
+      $db->query("delete from gpb_aufgabe_frage where aufgabeid=".$id);
+    }
+
+    $db->query("delete from gpb_aufgabe where id=".$id." limit 1");
+
+    // Upload-Ordner der Aufgabe (nur Text/Upload hat einen) samt Inhalt entfernen
+    $ordner = dirname(__FILE__).'/uploads/aufgabe_abgaben/'.$id;
+    if(is_dir($ordner)) {
+      foreach(glob($ordner.'/*') ?: array() as $datei) {
+        if(is_file($datei)) unlink($datei);
+      }
+      @rmdir($ordner);
+    }
+  }
+
   // Abgabe eines TN laden (oder null wenn noch keine existiert)
   function ladeAbgabe($tnid) {
     global $db;

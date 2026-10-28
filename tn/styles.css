@@ -127,3 +127,15 @@ h2 {
 .mini-inhalt ul li::before {
   content: "- ";
 }
+
+/* Aufgaben: Bewertung durch den Dozenten (unter dem Abgabeformular) */
+.aufgabe-bewertung {
+  border-left:4px solid #3a8f3a;
+  background-color:#eef7ee;
+  padding:0.4em 0.6em;
+  margin:0.5em 0 1em 0;
+}
+.aufgabe-bewertung-kommentar {
+  margin-top:0.3em;
+  font-style:italic;
+}

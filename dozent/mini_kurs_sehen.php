@@ -829,7 +829,10 @@ if(empty($aufgaben)) {
   <tr>
     <th>Titel</th>
     <th>Typ</th>
+    <th>Sichtbar ab</th>
+    <th>Fällig am</th>
     <th>Abgaben</th>
+    <th>Bewertet</th>
     <th></th>
   </tr>
 <?php
@@ -837,15 +840,28 @@ if(empty($aufgaben)) {
     $teilnehmer = $a->ladeTeilnehmerMitAbgabe();
     $anzahlGesamt = count($teilnehmer);
     $anzahlAbgegeben = 0;
+    $anzahlBewertet = 0;
     foreach($teilnehmer as $tn) {
       if(!empty($tn->abgabeid)) $anzahlAbgegeben++;
+      if(!empty($tn->abgabeid) && ($tn->punkte!==null || $tn->note!==null)) $anzahlBewertet++;
     }
 ?>
   <tr>
     <td><?= htmlspecialchars($a->titel) ?></td>
     <td><?= $a->typ=='text_upload' ? 'Text/Upload' : ($a->typ=='multiple_choice' ? 'Multiple Choice' : htmlspecialchars($a->typ)) ?></td>
+    <td><?= empty($a->sichtbarAb) ? 'sofort' : date('d.m.Y H:i', strtotime($a->sichtbarAb)) . ($a->istSichtbar() ? '' : ' <em>(noch verborgen)</em>') ?></td>
+    <td><?= empty($a->faelligAm) ? '-' : date('d.m.Y H:i', strtotime($a->faelligAm)) . ($a->istAbgelaufen() ? ' <em>(abgelaufen)</em>' : '') ?></td>
     <td><?= $anzahlAbgegeben ?> / <?= $anzahlGesamt ?></td>
-    <td><a href="aufgabe_bewertung.php?aufgabeid=<?= $a->id ?>">Noten</a></td>
+    <td><?= $anzahlBewertet ?> / <?= $anzahlAbgegeben ?></td>
+    <td style="white-space:nowrap;">
+      <a href="aufgabe_bewertung.php?aufgabeid=<?= $a->id ?>">Noten</a>
+      <a href="aufgabe_bearbeiten.php?aufgabeid=<?= $a->id ?>" title="Aufgabe bearbeiten">✏️ Bearbeiten</a>
+      <form method="post" action="aufgabe_loeschen.php" style="display:inline;"
+            onsubmit="return confirm('Aufgabe wirklich löschen? Alle Abgaben, Bewertungen und hochgeladenen Dateien der TN werden mit gelöscht.');">
+        <input type="hidden" name="aufgabeid" value="<?= $a->id ?>" />
+        <button type="submit" title="Aufgabe löschen">🗑️</button>
+      </form>
+    </td>
   </tr>
 <?php
   }

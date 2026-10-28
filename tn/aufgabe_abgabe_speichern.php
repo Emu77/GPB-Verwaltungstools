@@ -28,7 +28,18 @@ if(empty($aufgabe)) {
   exit;
 }
 
-$fehler = $aufgabe->speichereAbgabe($ich->id);
+// Noch nicht sichtbare Aufgaben dürfen nicht bearbeitet werden, abgelaufene
+// nehmen keine Abgaben mehr an (das Formular ist dann zwar schon gesperrt,
+// hier die serverseitige Absicherung).
+if(!$aufgabe->istSichtbar()) {
+  header('Location:mini_kurs_sehen.php?kursid='.$aufgabe->kursid);
+  exit;
+}
+if($aufgabe->istAbgelaufen()) {
+  $fehler = 'Abgabefrist abgelaufen – die Abgabe wurde nicht gespeichert.';
+} else {
+  $fehler = $aufgabe->speichereAbgabe($ich->id);
+}
 if($fehler !== null) {
   $_SESSION['aufgabe_fehler'] = $fehler;
 }

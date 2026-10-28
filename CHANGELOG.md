@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10
+
+### Mini: Aufgaben/Test-System ausgebaut
+- Dozent: Aufgaben bearbeiten (`dozent/aufgabe_bearbeiten.php` + `_speichern.php`): Titel, Beschreibung, max. Punkte, Sichtbar ab, Fällig am. Typ und MC-Fragen werden nur angezeigt. Bei geänderter Maximalpunktzahl werden alle MC-Abgaben neu bepunktet (Note/Kommentar bleiben).
+- Dozent: Aufgaben löschen (`dozent/aufgabe_loeschen.php`, nur per POST mit `confirm()`), inkl. Abgaben, Antworten, Bewertungen, MC-Fragen/-Optionen und hochgeladener Dateien (`Aufgabe::loeschen()`).
+- Dozent: Aufgabenliste im Mini-Kurs zeigt zusätzlich Sichtbar ab, Fällig am (mit Hinweis "noch verborgen"/"abgelaufen") und Anzahl bewerteter Abgaben.
+- Dozent: Multiple-Choice-Abgaben zeigen in der Notenansicht "x von y richtig", aufklappbar mit Antwort pro Frage (`AufgabeMultipleChoice::auswerten()`, von `automatischBewerten()` mitgenutzt).
+- TN: eigene Bewertung (Punkte von max., Note, Kommentar) unter jeder Aufgabe (`Aufgabe::makeBewertungFuerTn()`).
+- TN: nach Ablauf von "Fällig am" ist das Abgabeformular gesperrt; zusätzlich serverseitige Prüfung in `tn/aufgabe_abgabe_speichern.php` (auch gegen Abgaben auf noch nicht sichtbare Aufgaben).
+
+### Bugfix: Mini-Kurs löschen
+- `verwaltung/mini_freischalten.php` (Aktion `loeschen`) entfernt jetzt auch alle Anhänge der Paragraphen (Dateien + DB-Zeilen), vorher blieben Dateileichen in `mini_uploads/`.
+
 ## 2026-09
 
 ### Repo-Migration

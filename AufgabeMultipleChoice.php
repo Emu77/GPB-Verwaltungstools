@@ -40,6 +40,7 @@ class AufgabeMultipleChoice extends Aufgabe {
   }
 
   function makeAbgabeformular($tnid) {
+    $gesperrt = $this->istAbgelaufen();
     $abgabe = $this->ladeAbgabe($tnid);
     $antworten = $this->ladeAntworten($abgabe->id ?? null);
     $fragen = $this->ladeFragen();
@@ -54,6 +55,7 @@ class AufgabeMultipleChoice extends Aufgabe {
     <form method="post" action="aufgabe_abgabe_speichern.php">
       <input type="hidden" name="aufgabeid" value="<?= $this->id ?>" />
       <input type="hidden" name="kursid" value="<?= $this->kursid ?>" />
+      <fieldset class="aufgabe-abgabe-felder" style="border:0;padding:0;margin:0;"<?= $gesperrt ? ' disabled' : '' ?>>
 <?php
     foreach($fragen as $frage) {
 ?>
@@ -81,7 +83,18 @@ class AufgabeMultipleChoice extends Aufgabe {
 <?php
     }
 ?>
+      </fieldset>
+<?php
+    if($gesperrt) {
+?>
+      <p class="nok">Abgabefrist abgelaufen – keine Abgabe/Änderung mehr möglich.</p>
+<?php
+    } else {
+?>
       <p><button type="submit">Abgeben</button></p>
+<?php
+    }
+?>
     </form>
 <?php
   }
@@ -152,30 +165,44 @@ class AufgabeMultipleChoice extends Aufgabe {
     return true;
   }
 
+  // Auswertung einer Abgabe: array('richtig'=>n, 'gesamt'=>m, 'details'=>[...])
+  // details pro Frage: frage, gewaehlt (Text oder null), richtig (Text), korrekt (bool)
+  function auswerten($abgabeid) {
+    $fragen = $this->ladeFragen();
+    $antworten = $this->ladeAntworten($abgabeid);
+    $ergebnis = array('richtig'=>0, 'gesamt'=>count($fragen), 'details'=>array());
+    foreach($fragen as $frage) {
+      $richtigText = null;
+      $richtigId = null;
+      $gewaehltText = null;
+      foreach($frage->optionen as $option) {
+        if($option->ist_richtig) {
+          $richtigId = $option->id;
+          $richtigText = $option->text;
+        }
+        if(isset($antworten[$frage->id]) && $antworten[$frage->id]==$option->id) {
+          $gewaehltText = $option->text;
+        }
+      }
+      $korrekt = $richtigId!==null && isset($antworten[$frage->id]) && $antworten[$frage->id]==$richtigId;
+      if($korrekt) $ergebnis['richtig']++;
+      $ergebnis['details'][] = array(
+        'frage' => $frage->frage,
+        'gewaehlt' => $gewaehltText,
+        'richtig' => $richtigText,
+        'korrekt' => $korrekt,
+      );
+    }
+    return $ergebnis;
+  }
+
   function automatischBewerten($abgabeid) {
     global $db;
 
-    $fragen = $this->ladeFragen();
-    if(empty($fragen)) return;
-
-    $richtigeOptionProFrage = array();
-    foreach($fragen as $frage) {
-      foreach($frage->optionen as $option) {
-        if($option->ist_richtig) {
-          $richtigeOptionProFrage[$frage->id] = $option->id;
-        }
-      }
-    }
-
-    $antworten = $this->ladeAntworten($abgabeid);
-
-    $anzahlFragen = count($fragen);
-    $anzahlRichtig = 0;
-    foreach($richtigeOptionProFrage as $frageid => $richtigeOptionid) {
-      if(isset($antworten[$frageid]) && $antworten[$frageid]==$richtigeOptionid) {
-        $anzahlRichtig++;
-      }
-    }
+    $auswertung = $this->auswerten($abgabeid);
+    if($auswertung['gesamt']==0) return;
+    $anzahlFragen = $auswertung['gesamt'];
+    $anzahlRichtig = $auswertung['richtig'];
 
     $punkte = null;
     if($anzahlFragen>0 && $this->punkteMax!==null) {

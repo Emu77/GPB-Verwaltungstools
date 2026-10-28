@@ -33,11 +33,13 @@ class AufgabeTextUpload extends Aufgabe {
   }
 
   function makeAbgabeformular($tnid) {
+    $gesperrt = $this->istAbgelaufen();
     $abgabe = $this->ladeAbgabe($tnid);
 ?>
     <form method="post" enctype="multipart/form-data" action="aufgabe_abgabe_speichern.php">
       <input type="hidden" name="aufgabeid" value="<?= $this->id ?>" />
       <input type="hidden" name="kursid" value="<?= $this->kursid ?>" />
+      <fieldset class="aufgabe-abgabe-felder" style="border:0;padding:0;margin:0;"<?= $gesperrt ? ' disabled' : '' ?>>
       <p>
         <label for="aufgabe_text">Antwort:</label><br />
         <textarea id="aufgabe_text" name="aufgabe_text" rows="6" cols="60"><?= htmlentities($abgabe->text ?? '') ?></textarea>
@@ -60,7 +62,18 @@ class AufgabeTextUpload extends Aufgabe {
 <?php
     }
 ?>
+      </fieldset>
+<?php
+    if($gesperrt) {
+?>
+      <p class="nok">Abgabefrist abgelaufen – keine Abgabe/Änderung mehr möglich.</p>
+<?php
+    } else {
+?>
       <p><button type="submit">Abgeben</button></p>
+<?php
+    }
+?>
     </form>
 <?php
   }

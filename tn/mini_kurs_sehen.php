@@ -23,7 +23,7 @@ if (!$kurs->vonMir) {
 // Aufgaben laden - nur die, die bereits sichtbar sind
 $aufgaben = array();
 foreach (Aufgabe::ladenFuerKurs($kurs->id) as $a) {
-  if (empty($a->sichtbarAb) || strtotime($a->sichtbarAb) <= time()) {
+  if ($a->istSichtbar()) {
     $aufgaben[] = $a;
   }
 }
@@ -100,6 +100,7 @@ $kurs->makeSehen('sehen', true);
     <p><em>Fällig am <?= date('d.m.Y H:i', strtotime($a->faelligAm)) ?></em></p>
     <?php endif; ?>
     <?php $a->makeAbgabeformular($ich->id); ?>
+    <?php $a->makeBewertungFuerTn($ich->id); ?>
   </div>
 <?php endforeach; ?>
 </div>
