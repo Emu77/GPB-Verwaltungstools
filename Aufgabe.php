@@ -152,6 +152,29 @@ class Aufgabe {
 <?php
   }
 
+  // Einzelne Abgabe eines TN zurücksetzen (Dozent): Bewertung, MC-Antworten,
+  // hochgeladene Datei und die Abgabe selbst werden gelöscht. Danach kann der
+  // TN neu abgeben (z.B. wenn er MC versehentlich zu früh abgeschickt hat).
+  // Liefert false, wenn die Abgabe nicht zu dieser Aufgabe gehört.
+  function abgabeZuruecksetzen($abgabeid) {
+    global $db;
+    $abgabeid = intval($abgabeid);
+    $result = $db->query("select id, gespeicherter_dateiname from gpb_aufgabe_abgabe where id=".$abgabeid." and aufgabeid=".intval($this->id));
+    $abgabe = $result->fetch_object();
+    $result->free();
+    if(!$abgabe) return false;
+
+    $db->query("delete from gpb_aufgabe_bewertung where abgabeid=".$abgabeid);
+    $db->query("delete from gpb_aufgabe_abgabe_antwort where abgabeid=".$abgabeid);
+    $db->query("delete from gpb_aufgabe_abgabe where id=".$abgabeid." limit 1");
+
+    if(!empty($abgabe->gespeicherter_dateiname)) {
+      $pfad = dirname(__FILE__).'/uploads/aufgabe_abgaben/'.intval($this->id).'/'.basename($abgabe->gespeicherter_dateiname);
+      if(is_file($pfad)) unlink($pfad);
+    }
+    return true;
+  }
+
   // Aufgabe komplett löschen: Bewertungen, Antworten, Abgaben (inkl.
   // hochgeladener Dateien), Fragen/Optionen und die Aufgabe selbst.
   // Explizit statt per ON DELETE CASCADE, damit auch die Dateien auf der

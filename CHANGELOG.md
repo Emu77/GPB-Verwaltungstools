@@ -13,6 +13,7 @@
 ### Mini: Aufgaben – Politur
 - Multiple Choice nur noch einmal abgebbar (`AufgabeMultipleChoice::abgabeSperrgrund()`), sonst hätte der TN nach Anzeige der Punkte beliebig neu abgeben können. Neue gemeinsame Methode `Aufgabe::abgabeSperrgrund()` für Formular und serverseitige Prüfung.
 - TN: jede Aufgabe als eigener Kasten; Fristablauf steht rot neben "Fällig am" statt als Meldung unter dem Formular (wirkte, als gehöre sie zur nächsten Aufgabe).
+- Dozent-Notenseite: Button "Abgabe zurücksetzen" pro TN (mit `confirm()`), löscht Abgabe, MC-Antworten, hochgeladene Datei und Bewertung (`Aufgabe::abgabeZuruecksetzen()`, `dozent/aufgabe_abgabe_zuruecksetzen.php`) – z.B. wenn ein TN Multiple Choice versehentlich zu früh abgeschickt hat.
 - Dozent-Notenseite: TN mit Abgabe zuerst, Punkte deutsch formatiert (100 statt 100.00).
 
 ### Bugfix: Mini-Kurs löschen

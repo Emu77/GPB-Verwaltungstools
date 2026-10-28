@@ -105,6 +105,12 @@ $seite->anfangGenerieren();
         <div><em>Zuletzt bewertet am <?= date('d.m.Y H:i', strtotime($tn->bewertet_am)) ?></em></div>
 <?php endif; ?>
       </form>
+      <form method="post" action="aufgabe_abgabe_zuruecksetzen.php" style="margin-top:0.3em;"
+            onsubmit="return confirm('Abgabe von <?= htmlspecialchars(addslashes($tn->vorname.' '.$tn->nachname), ENT_QUOTES) ?> wirklich zurücksetzen? Antworten, hochgeladene Datei und Bewertung werden gelöscht, der TN kann danach neu abgeben.');">
+        <input type="hidden" name="abgabeid" value="<?= $tn->abgabeid ?>" />
+        <input type="hidden" name="aufgabeid" value="<?= $aufgabe->id ?>" />
+        <button type="submit" title="Abgabe löschen, damit der TN neu abgeben kann">↺ Abgabe zurücksetzen</button>
+      </form>
 <?php endif; ?>
     </td>
   </tr>
