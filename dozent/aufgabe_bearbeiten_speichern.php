@@ -35,11 +35,36 @@ $aufgabe->sichtbarAb = Aufgabe::datumAusFormular($_POST['sichtbar_ab'] ?? null);
 $aufgabe->faelligAm = Aufgabe::datumAusFormular($_POST['faellig_am'] ?? null);
 $aufgabe->speichernUpdate();
 
-// Multiple Choice: Punkte hängen von punkte_max ab -> bei Änderung alle
-// vorhandenen Abgaben neu bewerten
+// Multiple Choice: richtige Antwort pro Frage übernehmen (nur Optionen, die
+// wirklich zu der Frage dieser Aufgabe gehören)
+$richtigGeaendert = false;
+if($aufgabe instanceof AufgabeMultipleChoice && isset($_POST['richtig']) && is_array($_POST['richtig'])) {
+  $stmt = $db->prepare("update gpb_aufgabe_option set ist_richtig=? where id=?");
+  foreach($aufgabe->ladeFragen() as $frage) {
+    if(!isset($_POST['richtig'][$frage->id])) continue;
+    $gewaehlt = (int)$_POST['richtig'][$frage->id];
+    $gueltig = false;
+    foreach($frage->optionen as $o) {
+      if($o->id==$gewaehlt) $gueltig = true;
+    }
+    if(!$gueltig) continue;
+    foreach($frage->optionen as $o) {
+      $soll = $o->id==$gewaehlt ? 1 : 0;
+      if((int)$o->ist_richtig!==$soll) {
+        $stmt->bind_param('ii', $soll, $o->id);
+        $stmt->execute();
+        $richtigGeaendert = true;
+      }
+    }
+  }
+  $stmt->close();
+}
+
+// Multiple Choice: Punkte hängen von punkte_max und der richtigen Antwort ab
+// -> bei Änderung alle vorhandenen Abgaben neu bewerten
 $punkteMaxGeaendert = ($alterPunkteMax===null) !== ($aufgabe->punkteMax===null)
   || ($alterPunkteMax!==null && (float)$alterPunkteMax != (float)$aufgabe->punkteMax);
-if($aufgabe->kannAutomatischBewerten() && $punkteMaxGeaendert) {
+if($aufgabe->kannAutomatischBewerten() && ($punkteMaxGeaendert || $richtigGeaendert)) {
   $result = $db->query("select id from gpb_aufgabe_abgabe where aufgabeid=".intval($aufgabe->id));
   $abgabeids = array();
   while($row = $result->fetch_object()) {

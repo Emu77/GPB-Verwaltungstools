@@ -52,7 +52,7 @@ $seite->anfangGenerieren();
     <label for="punkte_max">Maximale Punktzahl:</label>
     <input type="number" id="punkte_max" name="punkte_max" step="0.5" min="0" style="width:6em;" value="<?= $aufgabe->punkteMax!==null ? htmlspecialchars((float)$aufgabe->punkteMax) : '' ?>" />
 <?php if($aufgabe instanceof AufgabeMultipleChoice): ?>
-    <br /><small>Bei Änderung werden alle Multiple-Choice-Abgaben automatisch neu bepunktet (manuell geänderte Punkte werden dabei überschrieben, Note und Kommentar bleiben).</small>
+    <br /><small>Bei Änderung (oder geänderter richtiger Antwort) werden alle Multiple-Choice-Abgaben automatisch neu bepunktet (manuell geänderte Punkte werden dabei überschrieben, Note und Kommentar bleiben).</small>
 <?php endif; ?>
   </p>
 
@@ -74,15 +74,20 @@ $seite->anfangGenerieren();
 
 <?php if($aufgabe instanceof AufgabeMultipleChoice): ?>
   <div style="border:1px solid #ccc;padding:0.5em;margin-bottom:1em;">
-    <strong>Fragen</strong> <small>(nur Ansicht – richtige Antwort ist fett)</small>
+    <strong>Fragen</strong> <small>(Texte nicht änderbar – richtige Antwort per Kreis wählen; bei Änderung werden alle Abgaben neu bepunktet)</small>
 <?php foreach($aufgabe->ladeFragen() as $nr => $frage): ?>
+<?php $hatRichtige = false; foreach($frage->optionen as $o) { if($o->ist_richtig) $hatRichtige = true; } ?>
     <div style="margin:0.5em 0;">
       <?= ($nr+1) ?>. <?= htmlspecialchars($frage->frage) ?>
-      <ul style="margin:0.2em 0;">
+<?php if(!$hatRichtige): ?>
+      <span style="color:#c00;font-weight:bold;">– keine richtige Antwort hinterlegt!</span>
+<?php endif; ?>
 <?php foreach($frage->optionen as $option): ?>
-        <li><?= $option->ist_richtig ? '<strong>'.htmlspecialchars($option->text).' ✓</strong>' : htmlspecialchars($option->text) ?></li>
+      <label style="display:block;margin-left:1.5em;">
+        <input type="radio" name="richtig[<?= $frage->id ?>]" value="<?= $option->id ?>" <?= $option->ist_richtig ? 'checked' : '' ?> required />
+        <?= htmlspecialchars($option->text) ?>
+      </label>
 <?php endforeach; ?>
-      </ul>
     </div>
 <?php endforeach; ?>
   </div>

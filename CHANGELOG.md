@@ -10,6 +10,10 @@
 - TN: eigene Bewertung (Punkte von max., Note, Kommentar) unter jeder Aufgabe (`Aufgabe::makeBewertungFuerTn()`).
 - TN: nach Ablauf von "Fällig am" ist das Abgabeformular gesperrt; zusätzlich serverseitige Prüfung in `tn/aufgabe_abgabe_speichern.php` (auch gegen Abgaben auf noch nicht sichtbare Aufgaben).
 
+### Bugfix: Multiple Choice – richtige Antwort wurde nie gespeichert
+- In `dozent/aufgabe_erstellen.php` hießen die Radio-Buttons für die richtige Antwort `frage_i_richtig`, der Server las aber `frage[i][richtig]` – dadurch hatte keine Option `ist_richtig=1` und jede MC-Abgabe bekam 0 Punkte. Name korrigiert, Radio als Pflichtfeld, zusätzlich serverseitige Prüfung in `aufgabe_erstellen_speichern.php`.
+- `dozent/aufgabe_bearbeiten.php`: richtige Antwort pro Frage nachträglich wählbar (Hinweis bei Fragen ohne richtige Antwort); bei Änderung werden alle Abgaben neu bepunktet. Damit lassen sich die vor dem Fix angelegten Aufgaben reparieren.
+
 ### Mini: Aufgaben – Politur
 - Multiple Choice nur noch einmal abgebbar (`AufgabeMultipleChoice::abgabeSperrgrund()`), sonst hätte der TN nach Anzeige der Punkte beliebig neu abgeben können. Neue gemeinsame Methode `Aufgabe::abgabeSperrgrund()` für Formular und serverseitige Prüfung.
 - TN: jede Aufgabe als eigener Kasten; Fristablauf steht rot neben "Fällig am" statt als Meldung unter dem Formular (wirkte, als gehöre sie zur nächsten Aufgabe).

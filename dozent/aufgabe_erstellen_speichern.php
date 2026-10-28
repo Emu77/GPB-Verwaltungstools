@@ -48,10 +48,14 @@ if($typ=='multiple_choice') {
       }
     }
     if(count($optionen) < 2) continue; // mindestens 2 Antwortoptionen nötig
+    $richtig = isset($f['richtig']) ? (string)$f['richtig'] : null;
+    if($richtig===null || !array_key_exists($richtig, $optionen)) {
+      aufgabeErstellenAbbrechen($kursid, 'Bitte bei der Frage "'.$frageText.'" die richtige Antwort markieren.');
+    }
     $gueltigeFragen[$key] = array(
       'text' => $frageText,
       'optionen' => $optionen,
-      'richtig' => isset($f['richtig']) ? $f['richtig'] : null,
+      'richtig' => $richtig,
     );
   }
   if(empty($gueltigeFragen)) {

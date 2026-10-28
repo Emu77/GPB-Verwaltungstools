@@ -61,7 +61,7 @@ $seite->anfangGenerieren();
   </p>
 
   <div id="fragen_bereich" style="display:none;border:1px solid #ccc;padding:0.5em;margin-bottom:1em;">
-    <strong>Fragen</strong>
+    <strong>Fragen</strong> <small>(den Kreis vor der richtigen Antwort markieren)</small>
     <div id="fragen_liste"></div>
     <p><button type="button" onclick="frageHinzufuegen()">+ Frage hinzufügen</button></p>
   </div>
@@ -103,7 +103,10 @@ function frageHinzufuegen() {
 
   block.querySelector('.frage-text').name = 'frage['+index+'][text]';
 
-  var optionenGroup = 'frage_'+index+'_richtig';
+  // Name muss frage[i][richtig] sein, damit der Server die richtige Option
+  // als $_POST['frage'][i]['richtig'] bekommt (vorher 'frage_i_richtig' ->
+  // richtige Antwort wurde nie gespeichert, alle MC-Abgaben hatten 0 Punkte)
+  var optionenGroup = 'frage['+index+'][richtig]';
   block.querySelectorAll('.option-richtig').forEach(function(r){ r.name = optionenGroup; });
 
   block.querySelector('.frage-loeschen').addEventListener('click', function() {
@@ -129,6 +132,8 @@ function optionHinzufuegen(block, frageIndex, optionenGroup, optionIndex) {
   var radio = zeile.querySelector('.option-richtig');
   radio.name = optionenGroup;
   radio.value = optionIndex;
+  radio.required = true; // pro Frage muss eine richtige Antwort markiert sein
+  radio.title = 'Richtige Antwort';
 
   zeile.querySelector('.option-text').name = 'frage['+frageIndex+'][optionen]['+optionIndex+']';
 
