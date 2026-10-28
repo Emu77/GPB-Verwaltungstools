@@ -35,8 +35,9 @@ if(!$aufgabe->istSichtbar()) {
   header('Location:mini_kurs_sehen.php?kursid='.$aufgabe->kursid);
   exit;
 }
-if($aufgabe->istAbgelaufen()) {
-  $fehler = 'Abgabefrist abgelaufen – die Abgabe wurde nicht gespeichert.';
+$sperrgrund = $aufgabe->abgabeSperrgrund($ich->id);
+if($sperrgrund!==null) {
+  $fehler = $sperrgrund.' Die Abgabe wurde nicht gespeichert.';
 } else {
   $fehler = $aufgabe->speichereAbgabe($ich->id);
 }

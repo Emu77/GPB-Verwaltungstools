@@ -97,7 +97,7 @@ $kurs->makeSehen('sehen', true);
     <div class="aufgabe-beschreibung"><?= nl2br(htmlspecialchars($a->beschreibung)) ?></div>
     <?php endif; ?>
     <?php if (!empty($a->faelligAm)): ?>
-    <p><em>Fällig am <?= date('d.m.Y H:i', strtotime($a->faelligAm)) ?></em></p>
+    <p><em>Fällig am <?= date('d.m.Y H:i', strtotime($a->faelligAm)) ?></em><?php if ($a->istAbgelaufen()): ?> – <span class="aufgabe-abgelaufen">Abgabefrist abgelaufen</span><?php endif; ?></p>
     <?php endif; ?>
     <?php $a->makeAbgabeformular($ich->id); ?>
     <?php $a->makeBewertungFuerTn($ich->id); ?>

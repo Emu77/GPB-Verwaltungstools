@@ -40,7 +40,8 @@ class AufgabeMultipleChoice extends Aufgabe {
   }
 
   function makeAbgabeformular($tnid) {
-    $gesperrt = $this->istAbgelaufen();
+    $sperrgrund = $this->abgabeSperrgrund($tnid);
+    $gesperrt = $sperrgrund!==null;
     $abgabe = $this->ladeAbgabe($tnid);
     $antworten = $this->ladeAntworten($abgabe->id ?? null);
     $fragen = $this->ladeFragen();
@@ -86,9 +87,13 @@ class AufgabeMultipleChoice extends Aufgabe {
       </fieldset>
 <?php
     if($gesperrt) {
+      // Fristablauf steht schon rot bei "Fällig am" (tn/mini_kurs_sehen.php),
+      // andere Gründe (z.B. MC bereits abgegeben) hier anzeigen
+      if(!$this->istAbgelaufen()) {
 ?>
-      <p class="nok">Abgabefrist abgelaufen – keine Abgabe/Änderung mehr möglich.</p>
+      <p class="aufgabe-gesperrt"><?= htmlspecialchars($sperrgrund) ?></p>
 <?php
+      }
     } else {
 ?>
       <p><button type="submit">Abgeben</button></p>
@@ -158,6 +163,17 @@ class AufgabeMultipleChoice extends Aufgabe {
 
     $this->automatischBewerten($abgabeid);
 
+    return null;
+  }
+
+  // Multiple Choice ist nur EINMAL abgebbar - sonst könnte der TN nach
+  // Anzeige der Punkte so lange neu abgeben, bis alles richtig ist.
+  function abgabeSperrgrund($tnid) {
+    $grund = parent::abgabeSperrgrund($tnid);
+    if($grund!==null) return $grund;
+    if($this->ladeAbgabe($tnid)) {
+      return 'Bereits abgegeben – bei Multiple Choice ist nur eine Abgabe möglich.';
+    }
     return null;
   }
 

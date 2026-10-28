@@ -33,7 +33,8 @@ class AufgabeTextUpload extends Aufgabe {
   }
 
   function makeAbgabeformular($tnid) {
-    $gesperrt = $this->istAbgelaufen();
+    $sperrgrund = $this->abgabeSperrgrund($tnid);
+    $gesperrt = $sperrgrund!==null;
     $abgabe = $this->ladeAbgabe($tnid);
 ?>
     <form method="post" enctype="multipart/form-data" action="aufgabe_abgabe_speichern.php">
@@ -65,9 +66,13 @@ class AufgabeTextUpload extends Aufgabe {
       </fieldset>
 <?php
     if($gesperrt) {
+      // Fristablauf steht schon rot bei "Fällig am" (tn/mini_kurs_sehen.php),
+      // andere Gründe (z.B. MC bereits abgegeben) hier anzeigen
+      if(!$this->istAbgelaufen()) {
 ?>
-      <p class="nok">Abgabefrist abgelaufen – keine Abgabe/Änderung mehr möglich.</p>
+      <p class="aufgabe-gesperrt"><?= htmlspecialchars($sperrgrund) ?></p>
 <?php
+      }
     } else {
 ?>
       <p><button type="submit">Abgeben</button></p>

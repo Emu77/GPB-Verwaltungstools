@@ -19,6 +19,12 @@ if(empty($kurs) || !in_array($ich->id, $kurs->dozentenids)) {
 }
 
 $teilnehmer = $aufgabe->ladeTeilnehmerMitAbgabe();
+// TN mit Abgabe zuerst, innerhalb der beiden Gruppen alphabetisch
+usort($teilnehmer, function($x, $y) {
+  $diff = (empty($x->abgabeid) ? 1 : 0) - (empty($y->abgabeid) ? 1 : 0);
+  if($diff!=0) return $diff;
+  return strcasecmp($x->nachname.' '.$x->vorname, $y->nachname.' '.$y->vorname);
+});
 
 require_once 'DozentSeite.php';
 $seite = new DozentSeite('Aufgabe bewerten: '.$aufgabe->titel);
@@ -34,7 +40,7 @@ $seite->anfangGenerieren();
 <?php endif; ?>
 
 <?php if(!empty($aufgabe->punkteMax)): ?>
-<p>Maximale Punktzahl: <?= htmlspecialchars($aufgabe->punkteMax) ?></p>
+<p>Maximale Punktzahl: <?= Aufgabe::punkteFormat($aufgabe->punkteMax) ?></p>
 <?php endif; ?>
 
 <?php if(empty($teilnehmer)): ?>
@@ -90,7 +96,7 @@ $seite->anfangGenerieren();
       <form method="post" action="aufgabe_bewertung_speichern.php">
         <input type="hidden" name="abgabeid" value="<?= $tn->abgabeid ?>" />
         <input type="hidden" name="aufgabeid" value="<?= $aufgabe->id ?>" />
-        Punkte: <input type="text" name="punkte" value="<?= htmlspecialchars($tn->punkte ?? '') ?>" size="4" />
+        Punkte: <input type="text" name="punkte" value="<?= Aufgabe::punkteFormat($tn->punkte) ?>" size="4" />
         Note: <input type="text" name="note" value="<?= htmlspecialchars($tn->note ?? '') ?>" size="4" />
         <br />
         Kommentar: <input type="text" name="kommentar" value="<?= htmlspecialchars($tn->kommentar ?? '') ?>" size="30" />

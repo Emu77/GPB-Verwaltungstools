@@ -106,6 +106,16 @@ class Aufgabe {
     return !empty($this->faelligAm) && strtotime($this->faelligAm) < time();
   }
 
+  // Grund, warum der TN (nicht mehr) abgeben darf, oder null wenn Abgabe
+  // möglich ist. Subklassen können weitere Gründe ergänzen (z.B. MC: nur
+  // eine Abgabe). Wird vom Formular UND serverseitig beim Speichern genutzt.
+  function abgabeSperrgrund($tnid) {
+    if($this->istAbgelaufen()) {
+      return 'Abgabefrist abgelaufen – keine Abgabe/Änderung mehr möglich.';
+    }
+    return null;
+  }
+
   // true, wenn die Aufgabe für TN schon sichtbar ist
   function istSichtbar() {
     return empty($this->sichtbarAb) || strtotime($this->sichtbarAb) <= time();
