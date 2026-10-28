@@ -16,6 +16,19 @@ if ($aktion === 'freischalten') {
   $stmt->close();
   $_SESSION['fehler']['done'] = 'Kurs fuer Mini freigeschaltet.';
 } elseif ($aktion === 'loeschen') {
+  // Erst die Anhänge aller Paragraphen löschen (Dateien + DB-Zeilen),
+  // sonst bleiben verwaiste Dateien in mini_uploads/ zurück.
+  require_once '../MiniAnhang.php';
+  $res = $db->query("SELECT id FROM gpb_mini_paragraph WHERE kursid=" . $kursid);
+  $pids = array();
+  while ($row = $res->fetch_object()) {
+    $pids[] = (int)$row->id;
+  }
+  $res->free();
+  foreach ($pids as $pid) {
+    miniAnhaengeVonParagraphLoeschen($pid);
+  }
+
   $stmt = $db->prepare("DELETE FROM gpb_mini_paragraph WHERE kursid=?");
   $stmt->bind_param('i', $kursid);
   $stmt->execute();
