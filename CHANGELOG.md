@@ -14,6 +14,8 @@
 - `dozent/kurs_il_noten.php`: Bei Mini-Kursen neue Zeile "Punkte aus Mini-Aufgabe in »Punkte /100« übernehmen" mit Auswahl der Aufgabe (alle mit Maximalpunktzahl, Vorauswahl wie bei Moodle: erste Aufgabe, die weder "IL..." noch "Nach..." heißt). Der Button rechnet die Punkte auf 100 um und trägt sie in die Eingabefelder ein; gespeichert wird wie bisher erst mit "Speichern" (analog zu "Bewertung aus Moodle holen"). TN ohne bewertete Abgabe bleiben unverändert.
 - Mini-Aufgaben mit Titel "IL..." erscheinen wie Moodle-IL-Tätigkeiten in der IL-Auswertung: ✓ abgegeben, X nach Fristablauf nicht abgegeben, leer solange die Frist läuft.
 - Bei Mini-Kursen ohne Moodle-Kurs entfällt die Meldung "Kein Moodle-Kurs".
+- Mini-Kurse fragen Moodle gar nicht mehr ab, auch wenn noch eine alte Moodle-ID eingetragen ist (vorher Fehlermeldung "Die Aufgaben aus Moodle konnten gerade nicht geladen werden").
+- "Übernehmen" entfernt bei TN mit bewerteter Mini-Abgabe den Haken "TN Fehlt" (sonst wurde die übernommene Punktzahl beim Speichern verworfen).
 - Getestet end-to-end (Playwright) gegen die importierte DB-Sicherung mit Kurs 1343.
 
 ### Mini: TN sieht nach Fristablauf die MC-Lösung

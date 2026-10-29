@@ -33,7 +33,10 @@ foreach($tns->alle as $tn) {
   }
 }
 
-if($kurs->moodleid>0) {
+// Mini-Kurse laufen ohne Moodle (Aufgaben/Noten kommen aus dem Mini, siehe
+// unten) - auch wenn noch eine alte Moodle-ID eingetragen ist, wird Moodle
+// dann nicht abgefragt.
+if($kurs->moodleid>0 && empty($kurs->mini)) {
   $daten=(object)array(
       'courseid'=>$kurs->moodleid
     );
@@ -356,6 +359,9 @@ function miniNotenUebernehmen() {
     const elem=document.getElementById('note_'+tnid);
     if(elem && noten[tnid]!==undefined) {
       elem.value=noten[tnid];
+      // wer eine bewertete Abgabe hat, hat nicht gefehlt
+      const fehlt=document.getElementById('fehlt_'+tnid);
+      if(fehlt) fehlt.checked=false;
       ++anzahl;
     }
   }
@@ -435,7 +441,7 @@ if($kurs->notenstatus!='keine' && !empty($miniAufgaben)) {
 ?>
   </select>
   <button type="button" onclick="miniNotenUebernehmen()">Übernehmen</button>
-  <small>(umgerechnet auf 100, TN ohne bewertete Abgabe bleiben unverändert)</small>
+  <small>(umgerechnet auf 100, "TN Fehlt" wird bei diesen TN entfernt, TN ohne bewertete Abgabe bleiben unverändert)</small>
   <span id="mini_noten_info"></span>
 </div>
 <?php
