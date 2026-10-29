@@ -555,8 +555,8 @@ if (!empty($fehler)): ?>
 
 <!-- Custom-WYSIWYG-Editor (Ersatz für TinyMCE, IHK-Projektarbeit Emu),
      siehe docs/Projektantrag_gpb_WYSIWYG_Editor.pdf -->
-<link rel="stylesheet" href="mini_wysiwyg.css" />
-<script src="mini_wysiwyg.js"></script>
+<link rel="stylesheet" href="mini_wysiwyg.css?v=<?= @filemtime('mini_wysiwyg.css') ?>" />
+<script src="mini_wysiwyg.js?v=<?= @filemtime('mini_wysiwyg.js') ?>"></script>
 <script>
 (function () {
   var container = document.getElementById('mini-paragraphen');

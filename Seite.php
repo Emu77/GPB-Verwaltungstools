@@ -16,7 +16,8 @@ class Seite {
 <html>
 <head>
   <meta charset="utf-8" />
-  <link rel="stylesheet" href="<?= $this->baseDir ?>styles.css" />
+  <?php /* ?v=Änderungszeit: Browser lädt die CSS nach jedem Deploy neu statt eine alte Version aus dem Cache zu nehmen */ ?>
+  <link rel="stylesheet" href="<?= $this->baseDir ?>styles.css?v=<?= @filemtime($this->baseDir.'styles.css') ?>" />
   <title><?= $this->getTitle() ?></title>
 </head>
 <body>
