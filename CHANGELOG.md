@@ -13,6 +13,8 @@
 ### Cache-Busting für CSS/JS
 - `Seite.php` und `dozent/mini_kurs_sehen.php` hängen an `styles.css`, `mini_wysiwyg.css` und `mini_wysiwyg.js` die Änderungszeit als `?v=...` an. Vorher zeigte der Browser nach einem Deploy weiter die alte CSS aus dem Cache (z.B. Listen mit Punkt statt "-", gelbe Editor-Fläche).
 
+- `@charset "UTF-8";` in den CSS-Dateien mit Umlauten/Sonderzeichen: Der Server liefert CSS ohne Zeichensatz aus, dadurch wurden z.B. die Anführungszeichen bei `.feedback` als `â€ž` angezeigt.
+
 ### Mini: Anhänge/Bilder – clevere Verwaltung (Remys Liste)
 - Bilder, die per "Bild einfügen" im Text stehen, werden in der Ansicht (TN, Dozent-Ansichtsmodus, Verwaltung) nicht noch einmal unter "Anhänge" aufgelistet (`miniAnhaengeOhneEingebettete()`).
 - Wird ein im Text verwendetes Bild gelöscht, entfernt `miniAnhangLoeschen()` die zugehörigen `<img>`-Tags aus allen Paragraphen des Kurses (kein kaputtes Bild im Text). Der `confirm()` weist vorher darauf hin.
