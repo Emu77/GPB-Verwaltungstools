@@ -166,6 +166,167 @@ class AufgabeMultipleChoice extends Aufgabe {
     return null;
   }
 
+  // Fragen/Antworten aus dem Bearbeiten-Formular übernehmen (Dozent):
+  // Texte ändern, Fragen/Optionen löschen und hinzufügen, richtige Antwort
+  // wählen. Erst wird der komplette Endzustand geprüft, nur wenn er gültig
+  // ist (>=1 Frage, je >=2 Optionen und genau 1 richtige) wird geschrieben.
+  // Liefert array('fehler'=>string|null, 'geaendert'=>bool). 'geaendert'
+  // heißt: Bewertung kann sich ändern -> Abgaben neu bepunkten.
+  //
+  // Erwartete Felder:
+  //   frage_text[fid], frage_loeschen[fid]
+  //   option_text[oid], option_loeschen[oid]
+  //   neue_option[fid][key] (key z.B. "n3")
+  //   richtig[fid] = oid oder key einer neuen Option
+  //   neue_frage[i][text], neue_frage[i][optionen][j], neue_frage[i][richtig]=j
+  function fragenAusFormularSpeichern($post) {
+    global $db;
+    $fragen = $this->ladeFragen();
+    $plan = array(); // Endzustand der bestehenden Fragen
+    $geaendert = false;
+
+    foreach($fragen as $frage) {
+      $fid = (int)$frage->id;
+      if(!empty($post['frage_loeschen'][$fid])) {
+        $plan[$fid] = array('loeschen'=>true);
+        $geaendert = true;
+        continue;
+      }
+      $text = isset($post['frage_text'][$fid]) ? trim($post['frage_text'][$fid]) : $frage->frage;
+      if($text==='') return array('fehler'=>'Fragetext darf nicht leer sein (Frage '.htmlspecialchars($frage->frage).').', 'geaendert'=>false);
+      $richtig = isset($post['richtig'][$fid]) ? (string)$post['richtig'][$fid] : null;
+
+      $optionen = array(); // key => text (bestehende: oid, neue: "nX")
+      $loeschOptionen = array();
+      foreach($frage->optionen as $o) {
+        $oid = (int)$o->id;
+        if(!empty($post['option_loeschen'][$oid])) {
+          $loeschOptionen[] = $oid;
+          continue;
+        }
+        $otext = isset($post['option_text'][$oid]) ? trim($post['option_text'][$oid]) : $o->text;
+        if($otext==='') return array('fehler'=>'Antworttext darf nicht leer sein (Frage "'.$text.'").', 'geaendert'=>false);
+        $optionen[(string)$oid] = $otext;
+      }
+      $neue = array();
+      if(isset($post['neue_option'][$fid]) && is_array($post['neue_option'][$fid])) {
+        foreach($post['neue_option'][$fid] as $key => $otext) {
+          $otext = trim($otext);
+          if($otext==='') continue;
+          $key = 'n'.preg_replace('/\D/', '', (string)$key);
+          $neue[$key] = $otext;
+          $optionen[$key] = $otext;
+        }
+      }
+      if(count($optionen) < 2) return array('fehler'=>'Frage "'.$text.'" braucht mindestens zwei Antwortoptionen.', 'geaendert'=>false);
+      if($richtig!==null && strpos($richtig, 'n')===0) $richtig = 'n'.preg_replace('/\D/', '', substr($richtig, 1));
+      if($richtig===null || !array_key_exists($richtig, $optionen)) {
+        return array('fehler'=>'Bitte bei der Frage "'.$text.'" eine (nicht gelöschte) richtige Antwort markieren.', 'geaendert'=>false);
+      }
+      if(!empty($loeschOptionen) || !empty($neue)) $geaendert = true;
+      $plan[$fid] = array('loeschen'=>false, 'text'=>$text, 'optionen'=>$optionen, 'neue'=>$neue, 'loeschOptionen'=>$loeschOptionen, 'richtig'=>$richtig, 'frage'=>$frage);
+    }
+
+    $neueFragen = array();
+    if(isset($post['neue_frage']) && is_array($post['neue_frage'])) {
+      foreach($post['neue_frage'] as $nf) {
+        $text = isset($nf['text']) ? trim($nf['text']) : '';
+        if($text==='') continue;
+        $optionen = array();
+        if(isset($nf['optionen']) && is_array($nf['optionen'])) {
+          foreach($nf['optionen'] as $j => $otext) {
+            $otext = trim($otext);
+            if($otext!=='') $optionen[(string)$j] = $otext;
+          }
+        }
+        if(count($optionen) < 2) return array('fehler'=>'Neue Frage "'.$text.'" braucht mindestens zwei Antwortoptionen.', 'geaendert'=>false);
+        $richtig = isset($nf['richtig']) ? (string)$nf['richtig'] : null;
+        if($richtig===null || !array_key_exists($richtig, $optionen)) return array('fehler'=>'Bitte bei der neuen Frage "'.$text.'" die richtige Antwort markieren.', 'geaendert'=>false);
+        $neueFragen[] = array('text'=>$text, 'optionen'=>$optionen, 'richtig'=>$richtig);
+        $geaendert = true;
+      }
+    }
+
+    $verbleibend = count($neueFragen);
+    foreach($plan as $p) if(!$p['loeschen']) $verbleibend++;
+    if($verbleibend==0) return array('fehler'=>'Eine Multiple-Choice-Aufgabe braucht mindestens eine Frage.', 'geaendert'=>false);
+
+    // --- ab hier ist alles gültig: schreiben ---
+    $stmtFrageText = $db->prepare("update gpb_aufgabe_frage set frage=? where id=?");
+    $stmtOptUpd = $db->prepare("update gpb_aufgabe_option set text=?, ist_richtig=? where id=?");
+    $stmtOptNeu = $db->prepare("insert into gpb_aufgabe_option (frageid,text,ist_richtig,reihenfolge) values (?,?,?,?)");
+    foreach($plan as $fid => $p) {
+      if($p['loeschen']) {
+        $db->query("delete from gpb_aufgabe_abgabe_antwort where frageid=".$fid);
+        $db->query("delete from gpb_aufgabe_option where frageid=".$fid);
+        $db->query("delete from gpb_aufgabe_frage where id=".$fid." and aufgabeid=".intval($this->id));
+        continue;
+      }
+      if($p['text']!==$p['frage']->frage) {
+        $stmtFrageText->bind_param('si', $p['text'], $fid);
+        $stmtFrageText->execute();
+      }
+      if(!empty($p['loeschOptionen'])) {
+        $liste = implode(',', array_map('intval', $p['loeschOptionen']));
+        $db->query("delete from gpb_aufgabe_abgabe_antwort where optionid in (".$liste.")");
+        $db->query("delete from gpb_aufgabe_option where id in (".$liste.") and frageid=".$fid);
+      }
+      $maxReihenfolge = 0;
+      foreach($p['frage']->optionen as $o) {
+        $maxReihenfolge = max($maxReihenfolge, (int)$o->reihenfolge);
+        if(in_array((int)$o->id, $p['loeschOptionen'])) continue;
+        $neuText = $p['optionen'][(string)$o->id];
+        $neuRichtig = $p['richtig']===(string)$o->id ? 1 : 0;
+        if($neuText!==$o->text || $neuRichtig!==(int)$o->ist_richtig) {
+          if($neuRichtig!==(int)$o->ist_richtig) $geaendert = true;
+          $stmtOptUpd->bind_param('sii', $neuText, $neuRichtig, $o->id);
+          $stmtOptUpd->execute();
+        }
+      }
+      foreach($p['neue'] as $key => $otext) {
+        $maxReihenfolge++;
+        $istRichtig = $p['richtig']===$key ? 1 : 0;
+        $stmtOptNeu->bind_param('isii', $fid, $otext, $istRichtig, $maxReihenfolge);
+        $stmtOptNeu->execute();
+      }
+    }
+
+    if(!empty($neueFragen)) {
+      $result = $db->query("select coalesce(max(reihenfolge),0) m from gpb_aufgabe_frage where aufgabeid=".intval($this->id));
+      $reihenfolge = (int)$result->fetch_object()->m;
+      $result->free();
+      $stmtFrageNeu = $db->prepare("insert into gpb_aufgabe_frage (aufgabeid,frage,reihenfolge) values (?,?,?)");
+      foreach($neueFragen as $nf) {
+        $reihenfolge++;
+        $stmtFrageNeu->bind_param('isi', $this->id, $nf['text'], $reihenfolge);
+        $stmtFrageNeu->execute();
+        $neueFid = $stmtFrageNeu->insert_id;
+        $optR = 0;
+        foreach($nf['optionen'] as $j => $otext) {
+          $optR++;
+          $istRichtig = $nf['richtig']===(string)$j ? 1 : 0;
+          $stmtOptNeu->bind_param('isii', $neueFid, $otext, $istRichtig, $optR);
+          $stmtOptNeu->execute();
+        }
+      }
+      $stmtFrageNeu->close();
+    }
+    $stmtFrageText->close();
+    $stmtOptUpd->close();
+    $stmtOptNeu->close();
+
+    return array('fehler'=>null, 'geaendert'=>$geaendert);
+  }
+
+  // Abgaben-Anzahl (für Hinweise beim Bearbeiten)
+  function anzahlAbgaben() {
+    global $db;
+    $result = $db->query("select count(*) c from gpb_aufgabe_abgabe where aufgabeid=".intval($this->id));
+    $c = (int)$result->fetch_object()->c;
+    $result->free();
+    return $c;
+  }
+
   // Multiple Choice ist nur EINMAL abgebbar - sonst könnte der TN nach
   // Anzeige der Punkte so lange neu abgeben, bis alles richtig ist.
   function abgabeSperrgrund($tnid) {

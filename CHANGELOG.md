@@ -10,6 +10,12 @@
 - TN: eigene Bewertung (Punkte von max., Note, Kommentar) unter jeder Aufgabe (`Aufgabe::makeBewertungFuerTn()`).
 - TN: nach Ablauf von "Fällig am" ist das Abgabeformular gesperrt; zusätzlich serverseitige Prüfung in `tn/aufgabe_abgabe_speichern.php` (auch gegen Abgaben auf noch nicht sichtbare Aufgaben).
 
+### Mini: Multiple-Choice-Fragen nachträglich bearbeiten
+- `dozent/aufgabe_bearbeiten.php`: Frage- und Antworttexte änderbar, Fragen/Antworten per Checkbox löschen, "+ Antwortoption" und "+ Frage hinzufügen", richtige Antwort per Kreis. Hinweis, wenn schon Abgaben existieren.
+- `AufgabeMultipleChoice::fragenAusFormularSpeichern()`: prüft zuerst den kompletten Endzustand (mind. 1 Frage, je mind. 2 Antworten, genau 1 richtige, keine leeren Texte) und schreibt nur, wenn alles gültig ist – sonst Fehlermeldung, nichts gespeichert. Antworten von TN auf gelöschte Fragen/Optionen werden mit entfernt.
+- Bei strukturellen Änderungen (Fragen/Optionen gelöscht/hinzugefügt, richtige Antwort geändert) werden alle Abgaben neu bepunktet; reine Textkorrekturen ändern die Punkte nicht.
+- Getestet end-to-end im Browser (Playwright) gegen MariaDB: Fehlerfall, Texte, Löschen, Hinzufügen, Neubewertung.
+
 ### Cache-Busting für CSS/JS
 - `Seite.php` und `dozent/mini_kurs_sehen.php` hängen an `styles.css`, `mini_wysiwyg.css` und `mini_wysiwyg.js` die Änderungszeit als `?v=...` an. Vorher zeigte der Browser nach einem Deploy weiter die alte CSS aus dem Cache (z.B. Listen mit Punkt statt "-", gelbe Editor-Fläche).
 
