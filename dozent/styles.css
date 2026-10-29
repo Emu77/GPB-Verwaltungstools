@@ -129,7 +129,9 @@ h1 {
   margin:-0.5em -0.5em 0.5em -0.5em;
 }
 .mini-paragraph-bearbeiten-formular input[type="text"],
-.mini-paragraph-bearbeiten-formular textarea {
+.mini-paragraph-bearbeiten-formular textarea,
+.mini-paragraph-bearbeiten-formular select,
+.mini-paragraph-bearbeiten-formular .mini-cwysiwyg-editor {
   background-color:#fff;
 }
 

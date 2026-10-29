@@ -246,8 +246,7 @@ $result = $db->query(
   "ORDER BY p.nummer ASC, a.hochgeladen_am ASC"
 );
 while ($row = $result->fetch_object()) {
-  $row->verwendet = (strpos($row->paragraph_inhalt, 'id=' . $row->id) !== false)
-    && preg_match('/mini_anhang_download\.php\?id=' . $row->id . '(?!\d)/', $row->paragraph_inhalt);
+  $row->verwendet = miniAnhangImTextVerwendet($row->id, $row->paragraph_inhalt);
   $alleAnhaenge[] = $row;
 }
 $result->free();
@@ -381,8 +380,10 @@ if (!empty($fehler)): ?>
         <?php foreach ($anhaenge as $a): ?>
         <div style="display:inline-block; vertical-align:top;">
           <?php miniAnhangAnzeigen($a, '../'); ?>
+          <?php $imText = miniAnhangImTextVerwendet($a->id, $p->inhalt); ?>
+          <?php if ($imText): ?><div style="font-size:11px;color:green;">✓ im Text</div><?php endif; ?>
           <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>"
-                onsubmit="return confirm('Anhang wirklich löschen?');">
+                onsubmit="return confirm('<?= $imText ? 'Das Bild wird im Text verwendet und verschwindet dort ebenfalls. Anhang wirklich löschen?' : 'Anhang wirklich löschen?' ?>');">
             <input type="hidden" name="aktion" value="anhang_loeschen" />
             <input type="hidden" name="anhangid" value="<?= $a->id ?>" />
             <input type="hidden" name="pid" value="<?= $p->id ?>" />
@@ -434,7 +435,7 @@ if (!empty($fehler)): ?>
       </span>
     </div>
     <div class="mini-inhalt" style="margin-top:0.5em;"><?= nl2br($p->inhalt) ?></div>
-    <?php $anhaengeAnsicht = miniAnhangListeLaden($p->id); ?>
+    <?php $anhaengeAnsicht = miniAnhaengeOhneEingebettete(miniAnhangListeLaden($p->id), $p->inhalt); /* Bilder im Text nicht doppelt zeigen */ ?>
     <?php if (!empty($anhaengeAnsicht)): ?>
     <div class="mini-anhaenge" style="margin-top:0.5em;">
       <strong>Anhänge:</strong>
@@ -500,7 +501,7 @@ if (!empty($fehler)): ?>
       </td>
       <td>
         <form method="post" action="mini_kurs_sehen.php?kursid=<?= $kurs->id ?>"
-              onsubmit="return confirm('Anhang wirklich löschen?');">
+              onsubmit="return confirm('<?= $a->verwendet ? 'Das Bild wird im Text verwendet und verschwindet dort ebenfalls. Anhang wirklich löschen?' : 'Anhang wirklich löschen?' ?>');">
           <input type="hidden" name="aktion" value="anhang_loeschen" />
           <input type="hidden" name="anhangid" value="<?= $a->id ?>" />
           <button type="submit" title="Anhang löschen">🗑️</button>
@@ -509,7 +510,7 @@ if (!empty($fehler)): ?>
     </tr>
     <?php endforeach; ?>
   </table>
-  <p><small>"Verwaist" heißt: das Bild ist hochgeladen, wird aber in keinem Paragraph-Text per "Bild einfügen" verwendet. Datei-Anhänge (PDF, Word, ...) können nicht in den Text eingefügt werden und werden deshalb nicht als verwaist markiert.</small></p>
+  <p><small>"Verwaist" heißt: das Bild ist hochgeladen, wird aber in keinem Paragraph-Text per "Bild einfügen" verwendet – TN sehen es dann nur unten unter "Anhänge". Bilder, die im Text stehen, werden dort nicht noch einmal aufgelistet. Wird ein im Text verwendetes Bild gelöscht, verschwindet es automatisch auch aus dem Text. Datei-Anhänge (PDF, Word, ...) können nicht in den Text eingefügt werden und werden deshalb nicht als verwaist markiert.</small></p>
   <?php endif; ?>
 </details>
 

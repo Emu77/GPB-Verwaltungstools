@@ -51,6 +51,28 @@ function miniAnhangAnzeigen($a, $basisPfad = '') {
   }
 }
 
+// true, wenn der Anhang per <img> (Button "Bild einfügen") im Text verwendet wird
+function miniAnhangImTextVerwendet($anhangid, $inhalt) {
+  return (bool)preg_match('/mini_anhang_download\.php\?id=' . (int)$anhangid . '(?!\d)/', (string)$inhalt);
+}
+
+// Für die Ansicht (TN, Dozent-Ansichtsmodus, Verwaltung): Bilder, die schon
+// im Text stehen, nicht noch einmal unter "Anhänge" wiederholen.
+function miniAnhaengeOhneEingebettete($anhaenge, $inhalt) {
+  return array_values(array_filter($anhaenge, function ($a) use ($inhalt) {
+    return !miniAnhangImTextVerwendet($a->id, $inhalt);
+  }));
+}
+
+// Entfernt alle <img>-Tags, die auf diesen Anhang zeigen, aus einem Text
+function miniAnhangAusTextEntfernen($inhalt, $anhangid) {
+  return preg_replace(
+    '/<img\b[^>]*mini_anhang_download\.php\?id=' . (int)$anhangid . '(?!\d)[^>]*>/i',
+    '',
+    (string)$inhalt
+  );
+}
+
 // Löscht einen Anhang komplett (Datei + DB-Zeile). Wird beim Löschen eines
 // einzelnen Anhangs sowie beim Löschen eines ganzen Paragraphen benutzt.
 function miniAnhangLoeschen($anhangid) {
@@ -60,6 +82,30 @@ function miniAnhangLoeschen($anhangid) {
   $anhang = $res->fetch_object();
   $res->free();
   if ($anhang) {
+    // Eingebettete Bilder aus allen Paragraphen desselben Kurses entfernen,
+    // sonst bleibt im Text ein kaputtes Bild zurück
+    $res = $db->query(
+      "SELECT p2.id, p2.inhalt FROM `gpb_mini_anhang` a " .
+      "JOIN `gpb_mini_paragraph` p ON p.id=a.paragraphid " .
+      "JOIN `gpb_mini_paragraph` p2 ON p2.kursid=p.kursid " .
+      "WHERE a.id=" . $anhangid
+    );
+    $zuAendern = array();
+    while ($row = $res->fetch_object()) {
+      if (miniAnhangImTextVerwendet($anhangid, $row->inhalt)) {
+        $zuAendern[(int)$row->id] = miniAnhangAusTextEntfernen($row->inhalt, $anhangid);
+      }
+    }
+    $res->free();
+    if (!empty($zuAendern)) {
+      $stmt = $db->prepare("UPDATE `gpb_mini_paragraph` SET inhalt=? WHERE id=?");
+      foreach ($zuAendern as $pid => $neuerInhalt) {
+        $stmt->bind_param('si', $neuerInhalt, $pid);
+        $stmt->execute();
+      }
+      $stmt->close();
+    }
+
     $pfad = miniAnhangPfad($anhang->dozentid, $anhang->gespeicherter_dateiname);
     if (is_file($pfad)) {
       unlink($pfad);

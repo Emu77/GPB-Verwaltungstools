@@ -66,7 +66,7 @@ $kurs->makeSehen('sehen', true);
   <div class="mini-paragraph">
     <h3><?= htmlspecialchars($p->titel) ?></h3>
     <div class="mini-inhalt"><?= nl2br($p->inhalt) /* HTML erlaubt */ ?></div>
-    <?php $anhaenge = miniAnhangListeLaden($p->id); ?>
+    <?php $anhaenge = miniAnhaengeOhneEingebettete(miniAnhangListeLaden($p->id), $p->inhalt); /* Bilder im Text nicht doppelt zeigen */ ?>
     <?php if (!empty($anhaenge)): ?>
     <div class="mini-anhaenge" style="margin-top:0.5em;">
       <strong>Anhänge:</strong>
