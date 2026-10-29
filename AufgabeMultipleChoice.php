@@ -45,6 +45,10 @@ class AufgabeMultipleChoice extends Aufgabe {
     $abgabe = $this->ladeAbgabe($tnid);
     $antworten = $this->ladeAntworten($abgabe->id ?? null);
     $fragen = $this->ladeFragen();
+    // Nach Fristablauf sieht der TN die Lösung: richtige Antwort grün, eigene
+    // falsche Antwort rot. Vorher nicht, sonst könnten TN die Lösungen an
+    // andere weitergeben, die noch nicht abgegeben haben.
+    $zeigeLoesung = $this->istAbgelaufen();
 
     if(empty($fragen)) {
 ?>
@@ -65,10 +69,19 @@ class AufgabeMultipleChoice extends Aufgabe {
 <?php
       foreach($frage->optionen as $option) {
         $checked = isset($antworten[$frage->id]) && $antworten[$frage->id]==$option->id;
+        $klasse = '';
+        $markierung = '';
+        if($zeigeLoesung && $option->ist_richtig) {
+          $klasse = 'mc-loesung-richtig';
+          $markierung = $checked ? ' ✓ richtig' : ' ✓ richtige Antwort';
+        } elseif($zeigeLoesung && $checked) {
+          $klasse = 'mc-loesung-falsch';
+          $markierung = ' ✗ deine Antwort';
+        }
 ?>
-        <label style="display:block;">
+        <label style="display:block;"<?= $klasse!=='' ? ' class="'.$klasse.'"' : '' ?>>
           <input type="radio" name="antwort[<?= $frage->id ?>]" value="<?= $option->id ?>" <?= $checked ? 'checked' : '' ?> />
-          <?= htmlentities($option->text) ?>
+          <?= htmlentities($option->text) ?><?php if($markierung!==''): ?><span class="mc-loesung-markierung"><?= $markierung ?></span><?php endif; ?>
         </label>
 <?php
       }
@@ -78,6 +91,18 @@ class AufgabeMultipleChoice extends Aufgabe {
     }
 ?>
 <?php
+    if($zeigeLoesung) {
+      if(!empty($abgabe)) {
+        $auswertung = $this->auswerten($abgabe->id);
+?>
+      <p class="mc-loesung-zusammenfassung"><strong>Lösung:</strong> <?= $auswertung['richtig'] ?> von <?= $auswertung['gesamt'] ?> Fragen richtig beantwortet.</p>
+<?php
+      } else {
+?>
+      <p class="mc-loesung-zusammenfassung"><strong>Lösung:</strong> Du hast nicht abgegeben – die richtigen Antworten sind grün markiert.</p>
+<?php
+      }
+    }
     if(!empty($abgabe->abgegeben_am)) {
 ?>
       <p><em>Zuletzt abgegeben am <?= date('d.m.Y H:i',strtotime($abgabe->abgegeben_am)) ?></em></p>

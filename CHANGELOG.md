@@ -10,6 +10,10 @@
 - TN: eigene Bewertung (Punkte von max., Note, Kommentar) unter jeder Aufgabe (`Aufgabe::makeBewertungFuerTn()`).
 - TN: nach Ablauf von "Fällig am" ist das Abgabeformular gesperrt; zusätzlich serverseitige Prüfung in `tn/aufgabe_abgabe_speichern.php` (auch gegen Abgaben auf noch nicht sichtbare Aufgaben).
 
+### Mini: TN sieht nach Fristablauf die MC-Lösung
+- `AufgabeMultipleChoice::makeAbgabeformular()`: Nach Ablauf von "Fällig am" wird pro Frage die richtige Antwort grün markiert ("✓ richtig" bzw. "✓ richtige Antwort"), eine eigene falsche Antwort rot ("✗ deine Antwort"), dazu "x von y Fragen richtig". Auch TN ohne Abgabe sehen die richtigen Antworten.
+- Vor Fristablauf bewusst keine Lösung (sonst könnten Lösungen an TN weitergegeben werden, die noch nicht abgegeben haben). MC-Aufgaben ohne Fälligkeitsdatum zeigen daher nie eine Lösung.
+
 ### Mini: Multiple-Choice-Fragen nachträglich bearbeiten
 - `dozent/aufgabe_bearbeiten.php`: Frage- und Antworttexte änderbar, Fragen/Antworten per Checkbox löschen, "+ Antwortoption" und "+ Frage hinzufügen", richtige Antwort per Kreis. Hinweis, wenn schon Abgaben existieren.
 - `AufgabeMultipleChoice::fragenAusFormularSpeichern()`: prüft zuerst den kompletten Endzustand (mind. 1 Frage, je mind. 2 Antworten, genau 1 richtige, keine leeren Texte) und schreibt nur, wenn alles gültig ist – sonst Fehlermeldung, nichts gespeichert. Antworten von TN auf gelöschte Fragen/Optionen werden mit entfernt.

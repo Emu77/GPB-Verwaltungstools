@@ -155,3 +155,20 @@ h2 {
   color:#666;
   font-style:italic;
 }
+
+/* Multiple Choice: Lösung nach Fristablauf */
+.mc-loesung-richtig {
+  background-color:#e3f4e3;
+  color:#1e6b1e;
+}
+.mc-loesung-falsch {
+  background-color:#fbe3e3;
+  color:#a00;
+}
+.mc-loesung-markierung {
+  font-weight:bold;
+  margin-left:0.5em;
+}
+.mc-loesung-zusammenfassung {
+  margin:0.5em 0;
+}
