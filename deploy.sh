@@ -13,7 +13,7 @@ cd "$(dirname "$0")" || exit 1
 VON="${1:-HEAD~1}"
 
 # Nur hinzugefügte/geänderte Dateien; docs/ und Markdown brauchen nicht auf den Server
-DATEIEN=$(git diff --name-only --diff-filter=ACMR "$VON" HEAD | grep -v -E '^docs/|\.md$|^deploy\.sh$')
+DATEIEN=$(git diff --name-only --diff-filter=ACMR "$VON" HEAD | grep -v -E '^docs/|\.md$|\.sql$|^deploy\.sh$')
 
 if [ -z "$DATEIEN" ]; then
   echo "Keine Dateien zum Hochladen."
