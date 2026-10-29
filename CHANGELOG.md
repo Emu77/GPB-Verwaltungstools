@@ -10,6 +10,12 @@
 - TN: eigene Bewertung (Punkte von max., Note, Kommentar) unter jeder Aufgabe (`Aufgabe::makeBewertungFuerTn()`).
 - TN: nach Ablauf von "Fällig am" ist das Abgabeformular gesperrt; zusätzlich serverseitige Prüfung in `tn/aufgabe_abgabe_speichern.php` (auch gegen Abgaben auf noch nicht sichtbare Aufgaben).
 
+### Mini: Aufgaben-Noten in die Kursnoten (IL+Noten)
+- `dozent/kurs_il_noten.php`: Bei Mini-Kursen neue Zeile "Punkte aus Mini-Aufgabe in »Punkte /100« übernehmen" mit Auswahl der Aufgabe (alle mit Maximalpunktzahl, Vorauswahl wie bei Moodle: erste Aufgabe, die weder "IL..." noch "Nach..." heißt). Der Button rechnet die Punkte auf 100 um und trägt sie in die Eingabefelder ein; gespeichert wird wie bisher erst mit "Speichern" (analog zu "Bewertung aus Moodle holen"). TN ohne bewertete Abgabe bleiben unverändert.
+- Mini-Aufgaben mit Titel "IL..." erscheinen wie Moodle-IL-Tätigkeiten in der IL-Auswertung: ✓ abgegeben, X nach Fristablauf nicht abgegeben, leer solange die Frist läuft.
+- Bei Mini-Kursen ohne Moodle-Kurs entfällt die Meldung "Kein Moodle-Kurs".
+- Getestet end-to-end (Playwright) gegen die importierte DB-Sicherung mit Kurs 1343.
+
 ### Mini: TN sieht nach Fristablauf die MC-Lösung
 - `AufgabeMultipleChoice::makeAbgabeformular()`: Nach Ablauf von "Fällig am" wird pro Frage die richtige Antwort grün markiert ("✓ richtig" bzw. "✓ richtige Antwort"), eine eigene falsche Antwort rot ("✗ deine Antwort"), dazu "x von y Fragen richtig". Auch TN ohne Abgabe sehen die richtigen Antworten.
 - Vor Fristablauf bewusst keine Lösung (sonst könnten Lösungen an TN weitergegeben werden, die noch nicht abgegeben haben). MC-Aufgaben ohne Fälligkeitsdatum zeigen daher nie eine Lösung.

@@ -62,6 +62,58 @@ if(isset($aufgaben)) {
   }
 }
 
+// Mini-Aufgaben (Kurse, die im Mini statt im Moodle stattfinden):
+// - Aufgaben mit Titel "IL..." erscheinen wie die Moodle-IL-Tätigkeiten in der
+//   IL-Auswertung (✓ abgegeben, X nach Fristablauf nicht abgegeben)
+// - Punkte jeder Aufgabe mit Maximalpunktzahl können per Button in die Spalte
+//   "Punkte /100" übernommen werden (umgerechnet auf 100), analog zu
+//   "Bewertung aus Moodle holen" - gespeichert wird erst mit "Speichern".
+$miniAufgaben = array();
+$miniNoten = array(); // aufgabeid => (tnid => Punkte /100)
+$miniVorauswahl = 0;
+if(!empty($kurs->mini)) {
+  require_once '../Aufgabe.php';
+  require_once '../AufgabeTextUpload.php';
+  require_once '../AufgabeMultipleChoice.php';
+  foreach(Aufgabe::ladenFuerKurs($kurs->id) as $a) {
+    $abgaben = array();
+    $noten = array();
+    foreach($a->ladeTeilnehmerMitAbgabe() as $t) {
+      if(!empty($t->abgabeid)) {
+        $abgaben[$t->tnid] = true;
+      } elseif($a->istAbgelaufen()) {
+        $abgaben[$t->tnid] = false;
+      }
+      if(!empty($t->abgabeid) && $t->punkte!==null && $a->punkteMax>0) {
+        $noten[$t->tnid] = max(0, min(100, (int)round($t->punkte / $a->punkteMax * 100)));
+      }
+    }
+    $titelKlein = strtolower($a->titel);
+    if(substr($titelKlein,0,2)=='il') {
+      $il[] = (object)array(
+        'mini'=>true,
+        'titel'=>'Mini: '.htmlspecialchars($a->titel),
+        'url'=>'aufgabe_bewertung.php?aufgabeid='.$a->id,
+        'modname'=>'mini',
+        'inhalt_vorhanden'=>1,
+        'abgaben'=>$abgaben,
+      );
+    }
+    if($a->punkteMax>0) {
+      $miniAufgaben[] = $a;
+      $miniNoten[$a->id] = $noten;
+      // Vorauswahl wie bei Moodle: erste Aufgabe, die weder "IL" noch "Nach..." heißt
+      if(!$miniVorauswahl && substr($titelKlein,0,2)!='il' && substr($titelKlein,0,4)!='nach') {
+        $miniVorauswahl = $a->id;
+      }
+    }
+  }
+  // Mini-Kurs ohne Moodle ist der Normalfall, kein Fehler
+  if(isset($fehler) && $fehler=='Kein Moodle-Kurs') {
+    unset($fehler);
+  }
+}
+
 function makeKopfTr() {
   global $kurs,$il,$klausur,$nachklausur;
 ?>
@@ -107,7 +159,7 @@ function makeKopfTd($aufgabe,$fehlertext,$notenuebernehmen=null) {
 <?php
     }
 ?>
-      <a href="<?= $aufgabe->url ?>" target="moodle"><?= $aufgabe->titel ?></a>
+      <a href="<?= $aufgabe->url ?>"<?= empty($aufgabe->mini) ? ' target="moodle"' : '' ?>><?= $aufgabe->titel ?></a>
     </td>
 <?php
   }
@@ -197,9 +249,10 @@ function makeAbgabeTd($aufgabe,$tn) {
     <td class="abgabe">&nbsp;</td>
 <?php
   } else {
+    $key = empty($aufgabe->mini) ? $tn->moodleid : $tn->id; // Mini-Abgaben sind nach GPB-TN-ID abgelegt
 ?>
-    <td class="abgabe <?= isset($aufgabe->abgaben[$tn->moodleid]) ? ($aufgabe->abgaben[$tn->moodleid] ? 'ok' : 'nok') : '' ?>">
-      <?= isset($aufgabe->abgaben[$tn->moodleid]) ? ($aufgabe->abgaben[$tn->moodleid] ? '✓' : 'X') : '&nbsp;' ?>
+    <td class="abgabe <?= isset($aufgabe->abgaben[$key]) ? ($aufgabe->abgaben[$key] ? 'ok' : 'nok') : '' ?>">
+      <?= isset($aufgabe->abgaben[$key]) ? ($aufgabe->abgaben[$key] ? '✓' : 'X') : '&nbsp;' ?>
     </td>
 <?php
   }
@@ -294,6 +347,23 @@ function nachnote_bearbeiten(tnid,wert) {
   req.open('GET','kurs_nachnote_speichern.php?kursid=<?= $kurs->id ?>&tnid='+tnid+'&nachnote='+encodeURIComponent(neu));
   req.send();
 }
+const miniNoten=<?= json_encode($miniNoten, JSON_FORCE_OBJECT) ?>;
+function miniNotenUebernehmen() {
+  const aufgabeid=document.getElementById('mini_aufgabe').value;
+  const noten=miniNoten[aufgabeid] || {};
+  let anzahl=0;
+  for(let tnid of tnids) {
+    const elem=document.getElementById('note_'+tnid);
+    if(elem && noten[tnid]!==undefined) {
+      elem.value=noten[tnid];
+      ++anzahl;
+    }
+  }
+  calcMittelwert(null,true);
+  const info=document.getElementById('mini_noten_info');
+  info.textContent=anzahl+' Punktzahl'+(anzahl==1 ? '' : 'en')+' übernommen – bitte prüfen und unten "Speichern" klicken.';
+  info.className=anzahl>0 ? 'done' : 'nok';
+}
 function noten_uebernehmen(modname,cminstance,was) {
   let daten={
       'courseid':<?= $kurs->moodleid ?>,
@@ -349,6 +419,28 @@ if($kurs->notenstatus!='keine') {
 }
 ?>
 <br />
+<?php
+if($kurs->notenstatus!='keine' && !empty($miniAufgaben)) {
+?>
+<br />
+<div id="mini_noten">
+  Punkte aus Mini-Aufgabe in "Punkte /100" übernehmen:
+  <select id="mini_aufgabe">
+<?php
+  foreach($miniAufgaben as $a) {
+?>
+    <option value="<?= $a->id ?>" <?= $a->id==$miniVorauswahl ? 'selected' : '' ?>><?= htmlspecialchars($a->titel) ?> (max. <?= Aufgabe::punkteFormat($a->punkteMax) ?> P.)</option>
+<?php
+  }
+?>
+  </select>
+  <button type="button" onclick="miniNotenUebernehmen()">Übernehmen</button>
+  <small>(umgerechnet auf 100, TN ohne bewertete Abgabe bleiben unverändert)</small>
+  <span id="mini_noten_info"></span>
+</div>
+<?php
+}
+?>
 <br />
 <form action="kurs_noten_speichern.php" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
   <input type="hidden" name="kursid" value="<?= $kurs->id ?>" />
